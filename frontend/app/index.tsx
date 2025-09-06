@@ -156,7 +156,114 @@ export default function LCATVApp() {
     loadData();
   };
 
-  const handleVideoPress = (video: YouTubeVideo) => {
+  const handleGetStarted = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowWelcome(false);
+  };
+
+  const renderWelcomePage = () => (
+    <SafeAreaView style={styles.welcomeContainer}>
+      <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.primary} />
+      
+      <LinearGradient
+        colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary, BURKINA_COLORS.accent]}
+        locations={[0, 0.7, 1]}
+        style={styles.welcomeGradient}
+      >
+        {/* Main Content */}
+        <View style={styles.welcomeContent}>
+          {/* Logo Area */}
+          <View style={styles.logoContainer}>
+            <BlurView intensity={30} style={styles.logoBlur}>
+              <Ionicons name="tv" size={80} color="white" />
+            </BlurView>
+            <Text style={styles.welcomeTitle}>LCA TV</Text>
+            <Text style={styles.welcomeSubtitle}>Burkina Faso</Text>
+            <View style={styles.taglineContainer}>
+              <Text style={styles.tagline}>Votre chaîne de référence</Text>
+              <Text style={styles.taglineSecondary}>Information • Culture • Divertissement</Text>
+            </View>
+          </View>
+
+          {/* Features Highlight */}
+          <View style={styles.featuresContainer}>
+            <View style={styles.featureItem}>
+              <View style={styles.featureIcon}>
+                <Ionicons name="radio-outline" size={24} color="white" />
+              </View>
+              <Text style={styles.featureText}>Live 24h/24</Text>
+            </View>
+            
+            <View style={styles.featureItem}>
+              <View style={styles.featureIcon}>
+                <Ionicons name="newspaper-outline" size={24} color="white" />
+              </View>
+              <Text style={styles.featureText}>Actualités</Text>
+            </View>
+            
+            <View style={styles.featureItem}>
+              <View style={styles.featureIcon}>
+                <Ionicons name="play-circle-outline" size={24} color="white" />
+              </View>
+              <Text style={styles.featureText}>Émissions</Text>
+            </View>
+          </View>
+
+          {/* Welcome Message */}
+          <View style={styles.welcomeMessageContainer}>
+            <Text style={styles.welcomeMessage}>
+              Découvrez l'actualité du Burkina Faso et de l'Afrique de l'Ouest en temps réel
+            </Text>
+          </View>
+        </View>
+
+        {/* Bottom Section with Watermark */}
+        <View style={styles.bottomSection}>
+          {/* Get Started Button */}
+          <TouchableOpacity
+            style={styles.getStartedButton}
+            onPress={handleGetStarted}
+            activeOpacity={0.8}
+          >
+            <BlurView intensity={20} style={styles.getStartedBlur}>
+              <Text style={styles.getStartedText}>Commencer</Text>
+              <Ionicons name="arrow-forward-circle" size={24} color="white" style={styles.getStartedIcon} />
+            </BlurView>
+          </TouchableOpacity>
+
+          {/* Curved Watermark */}
+          <View style={styles.watermarkContainer}>
+            <View style={styles.watermarkCurve}>
+              <LinearGradient
+                colors={['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)']}
+                style={styles.watermarkGradient}
+              >
+                <View style={styles.watermarkContent}>
+                  <View style={styles.watermarkLeft}>
+                    <Text style={styles.watermarkTitle}>LCA TV</Text>
+                    <Text style={styles.watermarkSubtitle}>Excellence en Information</Text>
+                  </View>
+                  <View style={styles.watermarkRight}>
+                    <View style={styles.watermarkIcon}>
+                      <Ionicons name="shield-checkmark" size={20} color="white" />
+                    </View>
+                    <Text style={styles.watermarkLabel}>Officiel</Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
+          </View>
+
+          {/* Decorative Elements */}
+          <View style={styles.decorativeElements}>
+            <View style={[styles.decorativeCircle, styles.circle1]} />
+            <View style={[styles.decorativeCircle, styles.circle2]} />
+            <View style={[styles.decorativeCircle, styles.circle3]} />
+          </View>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
+  );
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // In a real app, this would open the YouTube player
     Alert.alert(
