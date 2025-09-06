@@ -467,14 +467,22 @@ export default function LCATVApp() {
           activeOpacity={0.9}
         >
           <View style={styles.videoThumbnailContainer}>
-            <View style={styles.thumbnailPlaceholder}>
-              <LinearGradient
-                colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
-                style={styles.thumbnailGradient}
-              >
-                <Ionicons name="play" size={24} color="white" />
-              </LinearGradient>
-            </View>
+            {video.thumbnail ? (
+              <Image 
+                source={{ uri: video.thumbnail }}
+                style={styles.thumbnailImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.thumbnailPlaceholder}>
+                <LinearGradient
+                  colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+                  style={styles.thumbnailGradient}
+                >
+                  <Ionicons name="play" size={24} color="white" />
+                </LinearGradient>
+              </View>
+            )}
             
             <View style={styles.videoDurationBadge}>
               <Text style={styles.videoDurationText}>
