@@ -1033,4 +1033,152 @@ const styles = StyleSheet.create({
     color: BURKINA_COLORS.dark,
     lineHeight: 20,
   },
+
+  // Video Player Enhanced Styles
+  videoPlayerScrollView: {
+    flex: 1,
+  },
+
+  // Comments Section Styles
+  commentsSection: {
+    backgroundColor: BURKINA_COLORS.white,
+    marginTop: 8,
+  },
+  commentsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#f8f9fa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  commentsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: BURKINA_COLORS.dark,
+    marginLeft: 8,
+  },
+  commentInputSection: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  userInfoRow: {
+    marginBottom: 12,
+  },
+  userNameInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    backgroundColor: '#f9fafb',
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    maxHeight: 80,
+    textAlignVertical: 'top',
+    marginRight: 8,
+  },
+  sendButton: {
+    backgroundColor: BURKINA_COLORS.primary,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#e5e7eb',
+  },
+  commentsList: {
+    maxHeight: 400,
+  },
+  commentsLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  commentsLoadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  commentItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  commentUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: BURKINA_COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  commentMeta: {
+    flex: 1,
+  },
+  commentUserName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BURKINA_COLORS.dark,
+  },
+  commentTime: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  likeCount: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+  commentContent: {
+    fontSize: 14,
+    color: BURKINA_COLORS.dark,
+    lineHeight: 20,
+    marginLeft: 40,
+  },
+  noComments: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noCommentsText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 8,
+  },
 });
