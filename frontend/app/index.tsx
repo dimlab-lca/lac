@@ -380,14 +380,43 @@ export default function LCATVApp() {
         </View>
         
         <View style={styles.videoPlayerPlaceholder}>
-          <LinearGradient
-            colors={[BURKINA_COLORS.dark, '#374151']}
-            style={styles.playerGradient}
-          >
-            <Ionicons name="play-circle" size={60} color="white" />
-            <Text style={styles.playerTitle}>{currentLive.title}</Text>
-            <Text style={styles.playerSubtitle}>Touchez pour regarder</Text>
-          </LinearGradient>
+          {livePlayerActive ? (
+            <WebView
+              source={{
+                uri: `https://www.youtube.com/embed/${currentLive.video_id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`
+              }}
+              style={styles.webViewPlayer}
+              allowsFullscreenVideo={true}
+              mediaPlaybackRequiresUserAction={false}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              startInLoadingState={true}
+              renderLoading={() => (
+                <View style={styles.webViewLoading}>
+                  <Ionicons name="tv" size={40} color="white" />
+                  <Text style={styles.webViewLoadingText}>Chargement...</Text>
+                </View>
+              )}
+            />
+          ) : (
+            <TouchableOpacity 
+              style={styles.playerGradient}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setLivePlayerActive(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[BURKINA_COLORS.dark, '#374151']}
+                style={styles.playerGradient}
+              >
+                <Ionicons name="play-circle" size={60} color="white" />
+                <Text style={styles.playerTitle}>{currentLive.title}</Text>
+                <Text style={styles.playerSubtitle}>Touchez pour regarder</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
