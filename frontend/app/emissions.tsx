@@ -588,6 +588,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  refreshText: {
+    color: 'white',
+    fontSize: 10,
+    marginLeft: 4,
+    fontWeight: '500',
+  },
   searchButton: {
     width: 40,
     height: 40,
