@@ -367,23 +367,18 @@ export default function LCATVApp() {
         
         <View style={styles.videoPlayerPlaceholder}>
           {livePlayerActive ? (
-            <WebView
-              source={{
-                uri: `https://www.youtube.com/embed/${currentLive.video_id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`
-              }}
-              style={styles.webViewPlayer}
-              allowsFullscreenVideo={true}
-              mediaPlaybackRequiresUserAction={false}
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
-              startInLoadingState={true}
-              renderLoading={() => (
-                <View style={styles.webViewLoading}>
-                  <Ionicons name="tv" size={40} color="white" />
-                  <Text style={styles.webViewLoadingText}>Chargement...</Text>
-                </View>
-              )}
-            />
+            <View style={styles.iframeContainer}>
+              <iframe
+                src={`https://www.youtube.com/embed/${currentLive.video_id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen={true}
+              />
+            </View>
           ) : (
             <TouchableOpacity 
               style={styles.playerGradient}
