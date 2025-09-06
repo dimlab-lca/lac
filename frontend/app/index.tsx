@@ -264,6 +264,8 @@ export default function LCATVApp() {
       </LinearGradient>
     </SafeAreaView>
   );
+
+  const handleVideoPress = (video: YouTubeVideo) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // In a real app, this would open the YouTube player
     Alert.alert(
