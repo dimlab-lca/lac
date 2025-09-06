@@ -588,6 +588,222 @@ export default function LCATVApp() {
 }
 
 const styles = StyleSheet.create({
+  // Welcome Page Styles
+  welcomeContainer: {
+    flex: 1,
+  },
+  welcomeGradient: {
+    flex: 1,
+  },
+  welcomeContent: {
+    flex: 1,
+    paddingHorizontal: 32,
+    paddingTop: 80,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 60,
+  },
+  logoBlur: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    overflow: 'hidden',
+  },
+  welcomeTitle: {
+    fontSize: 42,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  welcomeSubtitle: {
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  taglineContainer: {
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  tagline: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  taglineSecondary: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+  },
+  featuresContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 40,
+  },
+  featureItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  featureIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  featureText: {
+    fontSize: 14,
+    color: 'white',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  welcomeMessageContainer: {
+    marginTop: 20,
+  },
+  welcomeMessage: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 20,
+  },
+  bottomSection: {
+    position: 'relative',
+    paddingHorizontal: 32,
+    paddingBottom: 40,
+  },
+  getStartedButton: {
+    marginBottom: 30,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  getStartedBlur: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  getStartedText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'white',
+    marginRight: 12,
+  },
+  getStartedIcon: {
+    marginLeft: 4,
+  },
+  
+  // Watermark Section
+  watermarkContainer: {
+    position: 'relative',
+    height: 80,
+    marginHorizontal: -32,
+  },
+  watermarkCurve: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    overflow: 'hidden',
+  },
+  watermarkGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  watermarkContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  watermarkLeft: {
+    flex: 1,
+  },
+  watermarkTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 2,
+  },
+  watermarkSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  watermarkRight: {
+    alignItems: 'center',
+  },
+  watermarkIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  watermarkLabel: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '600',
+  },
+  
+  // Decorative Elements
+  decorativeElements: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+  },
+  decorativeCircle: {
+    position: 'absolute',
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  circle1: {
+    width: 100,
+    height: 100,
+    top: -20,
+    right: 20,
+  },
+  circle2: {
+    width: 60,
+    height: 60,
+    bottom: 30,
+    left: 30,
+  },
+  circle3: {
+    width: 80,
+    height: 80,
+    top: 20,
+    left: -10,
+  },
+
+  // Main App Styles
   container: {
     flex: 1,
     backgroundColor: BURKINA_COLORS.light,
