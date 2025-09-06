@@ -582,7 +582,10 @@ export default function EmissionsScreen() {
 
       {/* Video Player Modal */}
       {showVideoPlayer && selectedVideo && (
-        <View style={styles.videoPlayerModal}>
+        <KeyboardAvoidingView 
+          style={styles.videoPlayerModal}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View style={styles.videoPlayerContainer}>
             <View style={styles.videoPlayerHeader}>
               <Text style={styles.videoPlayerTitle} numberOfLines={2}>
@@ -593,35 +596,131 @@ export default function EmissionsScreen() {
                 onPress={() => {
                   setShowVideoPlayer(false);
                   setSelectedVideo(null);
+                  setComments([]);
+                  setNewComment('');
                 }}
               >
                 <Ionicons name="close" size={24} color="white" />
               </TouchableOpacity>
             </View>
             
-            <View style={styles.videoPlayerContent}>
-              <iframe
-                src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen={true}
-              />
-            </View>
-            
-            <View style={styles.videoPlayerInfo}>
-              <Text style={styles.videoPlayerMeta}>
-                {formatViewCount(selectedVideo.view_count)} vues • {selectedVideo.like_count} ❤️
-              </Text>
-              <Text style={styles.videoPlayerDescription} numberOfLines={3}>
-                {selectedVideo.description}
-              </Text>
-            </View>
+            <ScrollView style={styles.videoPlayerScrollView} showsVerticalScrollIndicator={false}>
+              {/* Video Player */}
+              <View style={styles.videoPlayerContent}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`}
+                  style={{
+                    width: '100%',
+                    height: 250,
+                    border: 'none',
+                  }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen={true}
+                />
+              </View>
+              
+              {/* Video Info */}
+              <View style={styles.videoPlayerInfo}>
+                <Text style={styles.videoPlayerMeta}>
+                  {formatViewCount(selectedVideo.view_count)} vues • {selectedVideo.like_count} ❤️
+                </Text>
+                <Text style={styles.videoPlayerDescription} numberOfLines={3}>
+                  {selectedVideo.description}
+                </Text>
+              </View>
+
+              {/* Comments Section */}
+              <View style={styles.commentsSection}>
+                <View style={styles.commentsSectionHeader}>
+                  <Ionicons name="chatbubbles" size={20} color={BURKINA_COLORS.primary} />
+                  <Text style={styles.commentsSectionTitle}>
+                    Commentaires ({comments.length})
+                  </Text>
+                </View>
+
+                {/* User Input Section */}
+                <View style={styles.commentInputSection}>
+                  <View style={styles.userInfoRow}>
+                    <TextInput
+                      style={styles.userNameInput}
+                      placeholder="Votre nom (optionnel)"
+                      value={userName}
+                      onChangeText={setUserName}
+                      maxLength={30}
+                    />
+                  </View>
+                  
+                  <View style={styles.commentInputRow}>
+                    <TextInput
+                      style={styles.commentInput}
+                      placeholder="Écrivez votre commentaire..."
+                      value={newComment}
+                      onChangeText={setNewComment}
+                      multiline={true}
+                      maxLength={500}
+                      numberOfLines={3}
+                    />
+                    <TouchableOpacity 
+                      style={[
+                        styles.sendButton, 
+                        !newComment.trim() && styles.sendButtonDisabled
+                      ]}
+                      onPress={addComment}
+                      disabled={!newComment.trim()}
+                    >
+                      <Ionicons 
+                        name="send" 
+                        size={18} 
+                        color={newComment.trim() ? 'white' : '#ccc'} 
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Comments List */}
+                <View style={styles.commentsList}>
+                  {loadingComments ? (
+                    <View style={styles.commentsLoading}>
+                      <Ionicons name="refresh" size={24} color={BURKINA_COLORS.primary} />
+                      <Text style={styles.commentsLoadingText}>Chargement des commentaires...</Text>
+                    </View>
+                  ) : comments.length > 0 ? (
+                    comments.map((comment) => (
+                      <View key={comment.id} style={styles.commentItem}>
+                        <View style={styles.commentHeader}>
+                          <View style={styles.commentUserInfo}>
+                            <View style={styles.commentAvatar}>
+                              <Ionicons name="person" size={16} color="white" />
+                            </View>
+                            <View style={styles.commentMeta}>
+                              <Text style={styles.commentUserName}>{comment.user_name}</Text>
+                              <Text style={styles.commentTime}>{comment.time_ago}</Text>
+                            </View>
+                          </View>
+                          
+                          <TouchableOpacity 
+                            style={styles.likeButton}
+                            onPress={() => likeComment(comment.id)}
+                          >
+                            <Ionicons name="heart-outline" size={16} color="#666" />
+                            <Text style={styles.likeCount}>{comment.likes}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        
+                        <Text style={styles.commentContent}>{comment.content}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <View style={styles.noComments}>
+                      <Ionicons name="chatbubble-outline" size={40} color="#ccc" />
+                      <Text style={styles.noCommentsText}>Soyez le premier à commenter !</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       )}
     </SafeAreaView>
   );
