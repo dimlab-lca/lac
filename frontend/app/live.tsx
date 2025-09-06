@@ -50,6 +50,13 @@ export default function LiveScreen() {
     setIsFullscreen(!isFullscreen);
   };
 
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlayPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsPlaying(true);
+  };
+
   const renderLivePlayer = () => (
     <View style={styles.playerContainer}>
       <View style={styles.playerHeader}>
@@ -66,14 +73,40 @@ export default function LiveScreen() {
       </View>
 
       <View style={styles.videoPlayer}>
-        <LinearGradient
-          colors={[BURKINA_COLORS.dark, '#374151']}
-          style={styles.playerPlaceholder}
-        >
-          <Ionicons name="play-circle" size={80} color="white" />
-          <Text style={styles.playerTitle}>LCA TV en Direct</Text>
-          <Text style={styles.playerSubtitle}>Touchez pour regarder</Text>
-        </LinearGradient>
+        {isPlaying ? (
+          <WebView
+            source={{
+              uri: `https://www.youtube.com/embed/${currentLive?.video_id || 'ixQEmhTbvTI'}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`
+            }}
+            style={styles.webView}
+            allowsFullscreenVideo={true}
+            mediaPlaybackRequiresUserAction={false}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            renderLoading={() => (
+              <View style={styles.loadingView}>
+                <Ionicons name="tv" size={40} color="white" />
+                <Text style={styles.loadingText}>Chargement...</Text>
+              </View>
+            )}
+          />
+        ) : (
+          <TouchableOpacity 
+            style={styles.playerPlaceholder} 
+            onPress={handlePlayPress}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[BURKINA_COLORS.dark, '#374151']}
+              style={styles.playerGradient}
+            >
+              <Ionicons name="play-circle" size={80} color="white" />
+              <Text style={styles.playerTitle}>LCA TV en Direct</Text>
+              <Text style={styles.playerSubtitle}>Touchez pour regarder</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
