@@ -151,6 +151,21 @@ backend:
           comment: "✅ COMPREHENSIVE TESTING PASSED: POST /api/orders creates orders with proper cost calculation ($5000 for video+text modalities). GET /api/orders/my retrieves user orders correctly. Order system fully functional with modality selection and custom messages."
 
 frontend:
+  - task: "Video Playback Functionality"
+    implemented: true
+    working: true
+    file: "/app/frontend/app/live.tsx, /app/frontend/app/index.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reported 'videos not play' - video players were showing placeholders only"
+        - working: true
+          agent: "main"
+          comment: "Fixed video playback by implementing WebView components with YouTube embed URLs. Live player now shows actual YouTube videos when clicked. Added proper loading states and play/pause functionality."
+
   - task: "Modern Onboarding Screens"
     implemented: true
     working: true
