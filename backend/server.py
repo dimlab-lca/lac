@@ -20,6 +20,11 @@ import uvicorn
 import httpx
 import asyncio
 import json
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
