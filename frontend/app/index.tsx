@@ -640,22 +640,15 @@ export default function LCATVApp() {
               </TouchableOpacity>
             </View>
             <View style={styles.videoPlayerContent}>
-              <WebView
-                source={{
-                  uri: `https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`
+              <iframe
+                src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
                 }}
-                style={styles.videoPlayerWebView}
-                allowsFullscreenVideo={true}
-                mediaPlaybackRequiresUserAction={false}
-                javaScriptEnabled={true}
-                domStorageEnabled={true}
-                startInLoadingState={true}
-                renderLoading={() => (
-                  <View style={styles.videoPlayerLoading}>
-                    <Ionicons name="play-circle" size={60} color="white" />
-                    <Text style={styles.videoPlayerLoadingText}>Chargement...</Text>
-                  </View>
-                )}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen={true}
               />
             </View>
             <View style={styles.videoPlayerInfo}>
