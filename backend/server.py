@@ -725,6 +725,143 @@ npx expo start"""
     
     return response
 
+# ===== ENDPOINTS COMMENTAIRES =====
+
+@app.post("/api/videos/{video_id}/comments")
+async def add_comment(video_id: str, comment_data: Comment):
+    """Ajouter un commentaire à une vidéo"""
+    try:
+        # Créer le commentaire avec timestamp
+        comment = {
+            "video_id": video_id,
+            "content": comment_data.content,
+            "user_name": comment_data.user_name or "Utilisateur Anonyme",
+            "user_email": comment_data.user_email,
+            "created_at": datetime.now(),
+            "likes": 0,
+            "is_active": True
+        }
+        
+        # Insérer en base
+        result = await comments_collection.insert_one(comment)
+        comment["_id"] = str(result.inserted_id)
+        
+        logger.info(f"✅ Nouveau commentaire ajouté pour la vidéo {video_id}")
+        return {"message": "Commentaire ajouté avec succès", "comment": comment}
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de l'ajout du commentaire: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/videos/{video_id}/comments")
+async def get_comments(video_id: str, limit: int = 50):
+    """Récupérer les commentaires d'une vidéo"""
+    try:
+        # Récupérer les commentaires actifs, triés par date (plus récents en premier)
+        comments_cursor = comments_collection.find({
+            "video_id": video_id,
+            "is_active": True
+        }).sort("created_at", -1).limit(limit)
+        
+        comments = []
+        async for comment in comments_cursor:
+            comments.append({
+                "id": str(comment["_id"]),
+                "video_id": comment["video_id"],
+                "content": comment["content"],
+                "user_name": comment["user_name"],
+                "created_at": comment["created_at"].isoformat(),
+                "likes": comment.get("likes", 0),
+                "time_ago": format_time_ago(comment["created_at"])
+            })
+        
+        logger.info(f"✅ {len(comments)} commentaires récupérés pour la vidéo {video_id}")
+        return comments
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la récupération des commentaires: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/comments/{comment_id}/like")
+async def like_comment(comment_id: str):
+    """Liker un commentaire"""
+    try:
+        # Incrémenter le nombre de likes
+        result = await comments_collection.update_one(
+            {"_id": ObjectId(comment_id)},
+            {"$inc": {"likes": 1}}
+        )
+        
+        if result.modified_count > 0:
+            # Récupérer le commentaire mis à jour
+            comment = await comments_collection.find_one({"_id": ObjectId(comment_id)})
+            return {"message": "Like ajouté", "likes": comment.get("likes", 0)}
+        else:
+            raise HTTPException(status_code=404, detail="Commentaire non trouvé")
+            
+    except Exception as e:
+        logger.error(f"❌ Erreur lors du like: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/users/{user_email}/comments")
+async def get_user_comments(user_email: str, limit: int = 20):
+    """Récupérer les commentaires d'un utilisateur pour son profil"""
+    try:
+        comments_cursor = comments_collection.find({
+            "user_email": user_email,
+            "is_active": True
+        }).sort("created_at", -1).limit(limit)
+        
+        comments = []
+        async for comment in comments_cursor:
+            # Récupérer les infos de la vidéo depuis l'API YouTube
+            video_info = await get_youtube_video_info(comment["video_id"])
+            
+            comments.append({
+                "id": str(comment["_id"]),
+                "video_id": comment["video_id"],
+                "video_title": video_info.get("title", "Vidéo supprimée"),
+                "video_thumbnail": video_info.get("thumbnail", ""),
+                "content": comment["content"],
+                "created_at": comment["created_at"].isoformat(),
+                "likes": comment.get("likes", 0),
+                "time_ago": format_time_ago(comment["created_at"])
+            })
+        
+        return comments
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la récupération des commentaires utilisateur: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+def format_time_ago(created_at: datetime) -> str:
+    """Formater le temps écoulé depuis la création"""
+    now = datetime.now()
+    diff = now - created_at
+    
+    if diff.total_seconds() < 60:
+        return "À l'instant"
+    elif diff.total_seconds() < 3600:
+        minutes = int(diff.total_seconds() / 60)
+        return f"Il y a {minutes} min"
+    elif diff.total_seconds() < 86400:
+        hours = int(diff.total_seconds() / 3600)
+        return f"Il y a {hours}h"
+    else:
+        days = int(diff.total_seconds() / 86400)
+        return f"Il y a {days} jour{'s' if days > 1 else ''}"
+
+async def get_youtube_video_info(video_id: str):
+    """Récupérer les infos d'une vidéo YouTube (pour le profil utilisateur)"""
+    try:
+        # Cette fonction pourrait être optimisée en cachant les infos vidéo
+        return {
+            "title": f"Vidéo {video_id[:8]}...",
+            "thumbnail": f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
+        }
+    except:
+        return {"title": "Vidéo", "thumbnail": ""}
+
 # Health Check
 @app.get("/api/health")
 async def health_check():
