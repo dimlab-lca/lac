@@ -32,6 +32,7 @@ export default function LiveScreen() {
   const [currentLive, setCurrentLive] = useState<any>(null);
   const [viewerCount, setViewerCount] = useState('12.5K');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   
   const navigation = useNavigation();
 
