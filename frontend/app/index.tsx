@@ -270,13 +270,23 @@ export default function LCATVApp() {
 
   const handleVideoPress = (video: YouTubeVideo) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // In a real app, this would open the YouTube player
+    
+    // Create YouTube player URL
+    const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
+    
     Alert.alert(
       video.title,
-      `Ouvrir cette vidéo dans YouTube?\n\nVues: ${video.view_count}\nDurée: ${video.duration}`,
+      `Regarder cette vidéo?\n\nVues: ${formatViewCount(video.view_count)}\nDurée: ${video.duration}`,
       [
         { text: 'Annuler', style: 'cancel' },
-        { text: 'Regarder', onPress: () => console.log('Open YouTube video:', video.id) }
+        { 
+          text: 'Regarder', 
+          onPress: () => {
+            // In a real app, this would open a full-screen video player
+            // For now, we'll show an embedded player in an alert
+            console.log('Opening YouTube video:', youtubeUrl);
+          }
+        }
       ]
     );
   };
