@@ -505,7 +505,12 @@ export default function LCATVApp() {
       >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Ionicons name="tv" size={28} color="white" />
+            <TouchableOpacity 
+              style={styles.menuButton}
+              onPress={() => navigation.openDrawer()}
+            >
+              <Ionicons name="menu" size={24} color="white" />
+            </TouchableOpacity>
             <View style={styles.headerText}>
               <Text style={styles.headerTitle}>LCA TV</Text>
               <Text style={styles.headerSubtitle}>Burkina Faso</Text>
