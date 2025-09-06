@@ -17,7 +17,7 @@ import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { WebView } from 'react-native-webview';
+// WebView replaced with web-compatible iframe solution
 import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
