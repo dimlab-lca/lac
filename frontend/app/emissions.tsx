@@ -320,6 +320,69 @@ export default function EmissionsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedVideo(video);
     setShowVideoPlayer(true);
+    loadComments(video.id);
+  };
+
+  const loadComments = async (videoId: string) => {
+    try {
+      setLoadingComments(true);
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/videos/${videoId}/comments`);
+      const commentsData = await response.json();
+      setComments(commentsData);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const addComment = async () => {
+    if (!newComment.trim() || !selectedVideo) return;
+
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/videos/${selectedVideo.id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          video_id: selectedVideo.id,
+          content: newComment.trim(),
+          user_name: userName || 'Téléspectateur LCA TV',
+          user_email: userEmail
+        })
+      });
+
+      if (response.ok) {
+        setNewComment('');
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        // Recharger les commentaires
+        loadComments(selectedVideo.id);
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const likeComment = async (commentId: string) => {
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/comments/${commentId}/like`, {
+        method: 'PUT',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Mettre à jour le commentaire localement
+        setComments(prev => prev.map(comment => 
+          comment.id === commentId 
+            ? { ...comment, likes: data.likes }
+            : comment
+        ));
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    } catch (error) {
+      console.error('Error liking comment:', error);
+    }
   };
 
   const onRefresh = async () => {
