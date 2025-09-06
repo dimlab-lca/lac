@@ -5,627 +5,802 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   Dimensions,
   StatusBar,
   SafeAreaView,
+  RefreshControl,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { WebView } from 'react-native-webview';
 
 const { width, height } = Dimensions.get('window');
 
-interface Campaign {
+interface YouTubeVideo {
   id: string;
   title: string;
   description: string;
-  modalities: string[];
-  budget: number;
-  rating: number;
-  total_ratings: number;
+  thumbnail: string;
+  published_at: string;
+  view_count: string;
+  like_count: string;
+  duration: string;
+  category: string;
 }
 
-export default function Index() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [currentStep, setCurrentStep] = useState<'welcome' | 'main'>('welcome');
-  const [loading, setLoading] = useState(false);
+interface BreakingNews {
+  id: string;
+  title: string;
+  content: string;
+  priority: string;
+  source: string;
+  category: string;
+  created_at: string;
+}
 
-  const onboardingSteps = [
-    {
-      title: 'Create Powerful Campaigns',
-      subtitle: 'Design and launch publicity campaigns that reach your target audience effectively',
-      icon: 'rocket-outline',
-      gradient: ['#667eea', '#764ba2'],
-    },
-    {
-      title: 'Multi-Modal Content',
-      subtitle: 'Choose from video, text, and audio content to create engaging campaigns',
-      icon: 'play-circle-outline',
-      gradient: ['#f093fb', '#f5576c'],
-    },
-    {
-      title: 'Track & Rate Content',
-      subtitle: 'Follow your favorite campaigns and rate content to improve recommendations',
-      icon: 'star-outline',
-      gradient: ['#4facfe', '#00f2fe'],
-    },
+// Burkina Faso Colors
+const BURKINA_COLORS = {
+  primary: '#009639', // Green from flag
+  secondary: '#FCD116', // Yellow from flag
+  accent: '#CE1126', // Red from flag
+  dark: '#1a1a1a',
+  light: '#f8f9fa',
+  white: '#ffffff'
+};
+
+export default function LCATVApp() {
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  const [breakingNews, setBreakingNews] = useState<BreakingNews[]>([]);
+  const [currentLive, setCurrentLive] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const categories = [
+    { key: 'all', label: 'Tout', icon: 'grid-outline' },
+    { key: 'actualites', label: 'Actualités', icon: 'newspaper-outline' },
+    { key: 'live', label: 'Live', icon: 'radio-outline' },
+    { key: 'debats', label: 'Débats', icon: 'chatbubbles-outline' },
+    { key: 'sport', label: 'Sport', icon: 'football-outline' },
+    { key: 'culture', label: 'Culture', icon: 'musical-notes-outline' },
   ];
 
-  const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0);
-
   useEffect(() => {
-    if (currentStep === 'main') {
-      fetchCampaigns();
-    }
-  }, [currentStep]);
+    loadData();
+  }, []);
 
-  const fetchCampaigns = async () => {
-    setLoading(true);
+  const loadData = async () => {
     try {
       const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-      const response = await fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/campaigns`);
-      const data = await response.json();
-      setCampaigns(data);
+      
+      // Load videos, breaking news, and live info in parallel
+      const [videosRes, newsRes, liveRes] = await Promise.all([
+        fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/videos/latest?limit=20`),
+        fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/breaking-news`),
+        fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/live/current`)
+      ]);
+
+      if (videosRes.ok) {
+        const videosData = await videosRes.json();
+        setVideos(videosData);
+      }
+
+      if (newsRes.ok) {
+        const newsData = await newsRes.json();
+        setBreakingNews(newsData);
+      }
+
+      if (liveRes.ok) {
+        const liveData = await liveRes.json();
+        setCurrentLive(liveData);
+      }
+
     } catch (error) {
-      console.error('Error fetching campaigns:', error);
-      // Sample data for demo
-      setCampaigns([
+      console.error('Error loading data:', error);
+      // Fallback data for demo
+      setVideos([
+        {
+          id: 'ixQEmhTbvTI',
+          title: 'LCA TV - Diffusion en Direct',
+          description: 'Suivez LCA TV en direct 24h/24',
+          thumbnail: 'https://i.ytimg.com/vi/ixQEmhTbvTI/hqdefault.jpg',
+          published_at: '2024-12-15T08:00:00Z',
+          view_count: '25420',
+          like_count: '456',
+          duration: 'LIVE',
+          category: 'live'
+        },
+        {
+          id: 'zjWu0nZyBCY',
+          title: 'Journal LCA TV - Édition du Soir',
+          description: 'L\'essentiel de l\'actualité nationale et internationale',
+          thumbnail: 'https://i.ytimg.com/vi/zjWu0nZyBCY/hqdefault.jpg',
+          published_at: '2024-12-14T19:00:00Z',
+          view_count: '18750',
+          like_count: '324',
+          duration: '30:45',
+          category: 'actualites'
+        }
+      ]);
+
+      setBreakingNews([
         {
           id: '1',
-          title: 'Summer Fashion Campaign',
-          description: 'Promote your summer fashion collection with stunning visuals',
-          modalities: ['video', 'text', 'audio'],
-          budget: 5000,
-          rating: 4.5,
-          total_ratings: 12,
-        },
-        {
-          id: '2',
-          title: 'Tech Product Launch',
-          description: 'Launch your innovative tech product with comprehensive digital marketing',
-          modalities: ['video', 'text'],
-          budget: 8000,
-          rating: 4.8,
-          total_ratings: 8,
-        },
+          title: '🔴 URGENT',
+          content: 'Suivez en direct l\'actualité sur LCA TV',
+          priority: 'urgent',
+          source: 'LCA TV',
+          category: 'general',
+          created_at: new Date().toISOString()
+        }
       ]);
+
+      setCurrentLive({
+        video_id: 'ixQEmhTbvTI',
+        title: 'LCA TV - Diffusion en Direct',
+        is_live: true
+      });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleGetStarted = () => {
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
+
+  const handleVideoPress = (video: YouTubeVideo) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setCurrentStep('main');
-  };
-
-  const nextOnboardingStep = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (currentOnboardingStep < onboardingSteps.length - 1) {
-      setCurrentOnboardingStep(currentOnboardingStep + 1);
-    } else {
-      handleGetStarted();
-    }
-  };
-
-  const skipOnboarding = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    handleGetStarted();
-  };
-
-  const renderOnboardingScreen = () => {
-    const step = onboardingSteps[currentOnboardingStep];
-    
-    return (
-      <LinearGradient colors={step.gradient} style={styles.container}>
-        <StatusBar barStyle="light-content" />
-        <SafeAreaView style={styles.safeArea}>
-          {/* Skip Button */}
-          <View style={styles.skipContainer}>
-            <TouchableOpacity onPress={skipOnboarding} style={styles.skipButton}>
-              <Text style={styles.skipText}>Skip</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Main Content */}
-          <View style={styles.onboardingContent}>
-            {/* Icon */}
-            <View style={styles.iconContainer}>
-              <BlurView intensity={20} style={styles.iconBlur}>
-                <Ionicons name={step.icon as any} size={80} color="white" />
-              </BlurView>
-            </View>
-
-            {/* Text Content */}
-            <View style={styles.textContainer}>
-              <Text style={styles.onboardingTitle}>{step.title}</Text>
-              <Text style={styles.onboardingSubtitle}>{step.subtitle}</Text>
-            </View>
-
-            {/* Progress Indicators */}
-            <View style={styles.progressContainer}>
-              {onboardingSteps.map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.progressDot,
-                    index === currentOnboardingStep && styles.activeDot,
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
-
-          {/* Bottom Button */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              onPress={nextOnboardingStep}
-              style={styles.nextButton}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.nextButtonText}>
-                {currentOnboardingStep === onboardingSteps.length - 1 ? 'Get Started' : 'Next'}
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color="white" style={styles.buttonIcon} />
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
+    // In a real app, this would open the YouTube player
+    Alert.alert(
+      video.title,
+      `Ouvrir cette vidéo dans YouTube?\n\nVues: ${video.view_count}\nDurée: ${video.duration}`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Regarder', onPress: () => console.log('Open YouTube video:', video.id) }
+      ]
     );
   };
 
-  const renderMainApp = () => {
-    return (
-      <SafeAreaView style={styles.mainContainer}>
-        <StatusBar barStyle="dark-content" />
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.welcomeText}>Welcome back!</Text>
-            <Text style={styles.headerTitle}>Publicity Campaigns</Text>
-          </View>
-          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/auth/login')}>
-            <Ionicons name="person-circle-outline" size={32} color="#667eea" />
-          </TouchableOpacity>
-        </View>
+  const handleCategoryPress = (category: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedCategory(category);
+  };
 
-        {/* Featured Section */}
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <Text style={styles.sectionTitle}>Featured Campaigns</Text>
-          
+  const filteredVideos = selectedCategory === 'all' 
+    ? videos 
+    : videos.filter(video => video.category === selectedCategory);
+
+  const formatViewCount = (count: string) => {
+    const num = parseInt(count);
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return count;
+  };
+
+  const formatDuration = (duration: string) => {
+    if (duration === 'LIVE') return '🔴 LIVE';
+    return duration;
+  };
+
+  const renderBreakingNewsBar = () => {
+    if (!breakingNews.length) return null;
+
+    return (
+      <View style={styles.breakingNewsContainer}>
+        {/* Urgent News Bar */}
+        <LinearGradient
+          colors={[BURKINA_COLORS.accent, '#dc2626']}
+          style={styles.urgentNewsBar}
+        >
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={styles.featuredScroll}
-            contentContainerStyle={styles.featuredScrollContent}
+            style={styles.newsScroll}
           >
-            {campaigns.slice(0, 3).map((campaign, index) => (
-              <TouchableOpacity
-                key={campaign.id}
-                style={[styles.featuredCard, index === 0 && styles.firstCard]}
-                activeOpacity={0.9}
-              >
-                <LinearGradient
-                  colors={['#667eea', '#764ba2']}
-                  style={styles.featuredCardGradient}
-                >
-                  <View style={styles.featuredCardContent}>
-                    <View style={styles.featuredCardHeader}>
-                      <Text style={styles.featuredCardTitle}>{campaign.title}</Text>
-                      <View style={styles.ratingContainer}>
-                        <Ionicons name="star" size={12} color="#FFD700" />
-                        <Text style={styles.ratingText}>{campaign.rating}</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.featuredCardDescription}>
-                      {campaign.description}
-                    </Text>
-                    <View style={styles.modalityContainer}>
-                      {campaign.modalities.map((modality) => (
-                        <View key={modality} style={styles.modalityTag}>
-                          <Text style={styles.modalityText}>{modality}</Text>
-                        </View>
-                      ))}
-                    </View>
-                    <Text style={styles.budgetText}>Budget: ${campaign.budget}</Text>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
+            {breakingNews
+              .filter(news => news.priority === 'urgent')
+              .map((news, index) => (
+                <Text key={index} style={styles.urgentNewsText}>
+                  {news.title} • {news.content} •{' '}
+                </Text>
+              ))}
           </ScrollView>
+        </LinearGradient>
 
-          {/* Quick Actions */}
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity style={styles.quickActionCard} activeOpacity={0.8}>
-              <LinearGradient colors={['#f093fb', '#f5576c']} style={styles.quickActionGradient}>
-                <Ionicons name="add-circle-outline" size={32} color="white" />
-                <Text style={styles.quickActionText}>New Campaign</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.quickActionCard} activeOpacity={0.8}>
-              <LinearGradient colors={['#4facfe', '#00f2fe']} style={styles.quickActionGradient}>
-                <Ionicons name="list-outline" size={32} color="white" />
-                <Text style={styles.quickActionText}>My Orders</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.quickActionCard} activeOpacity={0.8}>
-              <LinearGradient colors={['#43e97b', '#38f9d7']} style={styles.quickActionGradient}>
-                <Ionicons name="analytics-outline" size={32} color="white" />
-                <Text style={styles.quickActionText}>Analytics</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-
-          {/* All Campaigns */}
-          <Text style={styles.sectionTitle}>All Campaigns</Text>
-          {campaigns.map((campaign) => (
-            <TouchableOpacity key={campaign.id} style={styles.campaignCard} activeOpacity={0.9}>
-              <View style={styles.campaignCardContent}>
-                <View style={styles.campaignCardLeft}>
-                  <Text style={styles.campaignCardTitle}>{campaign.title}</Text>
-                  <Text style={styles.campaignCardDescription}>{campaign.description}</Text>
-                  <View style={styles.campaignCardFooter}>
-                    <View style={styles.modalityContainer}>
-                      {campaign.modalities.slice(0, 2).map((modality) => (
-                        <View key={modality} style={styles.modalityTagSmall}>
-                          <Text style={styles.modalityTextSmall}>{modality}</Text>
-                        </View>
-                      ))}
-                      {campaign.modalities.length > 2 && (
-                        <Text style={styles.moreModalities}>+{campaign.modalities.length - 2}</Text>
-                      )}
-                    </View>
-                    <View style={styles.ratingContainerSmall}>
-                      <Ionicons name="star" size={14} color="#FFD700" />
-                      <Text style={styles.ratingTextSmall}>{campaign.rating}</Text>
-                    </View>
-                  </View>
-                </View>
-                <View style={styles.campaignCardRight}>
-                  <Text style={styles.budgetTextSmall}>${campaign.budget}</Text>
-                  <TouchableOpacity style={styles.orderButton}>
-                    <Text style={styles.orderButtonText}>Order</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </SafeAreaView>
+        {/* Live News Bar */}
+        <LinearGradient
+          colors={[BURKINA_COLORS.primary, '#16a34a']}
+          style={styles.liveNewsBar}
+        >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.newsScroll}
+          >
+            {breakingNews
+              .filter(news => news.priority === 'important')
+              .map((news, index) => (
+                <Text key={index} style={styles.liveNewsText}>
+                  {news.title} • {news.content} •{' '}
+                </Text>
+              ))}
+          </ScrollView>
+        </LinearGradient>
+      </View>
     );
   };
 
-  return currentStep === 'welcome' ? renderOnboardingScreen() : renderMainApp();
+  const renderLivePlayer = () => {
+    if (!currentLive) return null;
+
+    return (
+      <View style={styles.livePlayerContainer}>
+        <View style={styles.livePlayerHeader}>
+          <View style={styles.liveIndicator}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>EN DIRECT</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.fullscreenButton}
+            onPress={() => Alert.alert('Plein écran', 'Fonctionnalité bientôt disponible')}
+          >
+            <Ionicons name="expand-outline" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.videoPlayerPlaceholder}>
+          <LinearGradient
+            colors={[BURKINA_COLORS.dark, '#374151']}
+            style={styles.playerGradient}
+          >
+            <Ionicons name="play-circle" size={60} color="white" />
+            <Text style={styles.playerTitle}>{currentLive.title}</Text>
+            <Text style={styles.playerSubtitle}>Touchez pour regarder</Text>
+          </LinearGradient>
+        </View>
+      </View>
+    );
+  };
+
+  const renderCategoryFilter = () => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.categoryContainer}
+      contentContainerStyle={styles.categoryContent}
+    >
+      {categories.map((category) => (
+        <TouchableOpacity
+          key={category.key}
+          style={[
+            styles.categoryButton,
+            selectedCategory === category.key && styles.categoryButtonActive
+          ]}
+          onPress={() => handleCategoryPress(category.key)}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={category.icon as any}
+            size={18}
+            color={selectedCategory === category.key ? 'white' : BURKINA_COLORS.primary}
+          />
+          <Text
+            style={[
+              styles.categoryText,
+              selectedCategory === category.key && styles.categoryTextActive
+            ]}
+          >
+            {category.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  const renderVideoGrid = () => (
+    <View style={styles.videosGrid}>
+      {filteredVideos.map((video) => (
+        <TouchableOpacity
+          key={video.id}
+          style={styles.videoCard}
+          onPress={() => handleVideoPress(video)}
+          activeOpacity={0.9}
+        >
+          <View style={styles.videoThumbnailContainer}>
+            <View style={styles.thumbnailPlaceholder}>
+              <LinearGradient
+                colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+                style={styles.thumbnailGradient}
+              >
+                <Ionicons name="play" size={24} color="white" />
+              </LinearGradient>
+            </View>
+            
+            <View style={styles.videoDurationBadge}>
+              <Text style={styles.videoDurationText}>
+                {formatDuration(video.duration)}
+              </Text>
+            </View>
+            
+            {video.category === 'live' && (
+              <View style={styles.liveBadge}>
+                <View style={styles.liveBadgeDot} />
+                <Text style={styles.liveBadgeText}>LIVE</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.videoInfo}>
+            <Text style={styles.videoTitle} numberOfLines={2}>
+              {video.title}
+            </Text>
+            <Text style={styles.videoMeta}>
+              {formatViewCount(video.view_count)} vues • {video.like_count} ❤️
+            </Text>
+            <View style={styles.videoCategoryBadge}>
+              <Text style={styles.videoCategoryText}>
+                {categories.find(c => c.key === video.category)?.label || 'Général'}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+          style={styles.loadingContainer}
+        >
+          <View style={styles.loadingContent}>
+            <Ionicons name="tv" size={60} color="white" />
+            <Text style={styles.loadingTitle}>LCA TV</Text>
+            <Text style={styles.loadingSubtitle}>Burkina Faso</Text>
+            <View style={styles.loadingIndicator}>
+              <View style={styles.loadingDot} />
+              <View style={styles.loadingDot} />
+              <View style={styles.loadingDot} />
+            </View>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.primary} />
+      
+      {/* Header */}
+      <LinearGradient
+        colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Ionicons name="tv" size={28} color="white" />
+            <View style={styles.headerText}>
+              <Text style={styles.headerTitle}>LCA TV</Text>
+              <Text style={styles.headerSubtitle}>Burkina Faso</Text>
+            </View>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={() => router.push('/auth/login')}
+            >
+              <Ionicons name="person-circle-outline" size={28} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerButton}>
+              <Ionicons name="search-outline" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </LinearGradient>
+
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[BURKINA_COLORS.primary]}
+            tintColor={BURKINA_COLORS.primary}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Breaking News Bars */}
+        {renderBreakingNewsBar()}
+
+        {/* Live Player */}
+        {renderLivePlayer()}
+
+        {/* Category Filter */}
+        {renderCategoryFilter()}
+
+        {/* Section Title */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            {selectedCategory === 'all' ? 'Dernières Vidéos' : categories.find(c => c.key === selectedCategory)?.label}
+          </Text>
+          <Text style={styles.sectionSubtitle}>
+            {filteredVideos.length} vidéo{filteredVideos.length > 1 ? 's' : ''}
+          </Text>
+        </View>
+
+        {/* Videos Grid */}
+        {renderVideoGrid()}
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <LinearGradient
+            colors={[BURKINA_COLORS.primary, BURKINA_COLORS.dark]}
+            style={styles.footerGradient}
+          >
+            <Text style={styles.footerTitle}>LCA TV Burkina Faso</Text>
+            <Text style={styles.footerSubtitle}>
+              Votre chaîne de référence pour l'actualité nationale et internationale
+            </Text>
+            <View style={styles.footerStats}>
+              <View style={styles.footerStat}>
+                <Text style={styles.footerStatNumber}>50K+</Text>
+                <Text style={styles.footerStatLabel}>Abonnés</Text>
+              </View>
+              <View style={styles.footerStat}>
+                <Text style={styles.footerStatNumber}>2M+</Text>
+                <Text style={styles.footerStatLabel}>Vues/mois</Text>
+              </View>
+              <View style={styles.footerStat}>
+                <Text style={styles.footerStatNumber}>24h/24</Text>
+                <Text style={styles.footerStatLabel}>En direct</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: BURKINA_COLORS.light,
   },
-  safeArea: {
+  loadingContainer: {
     flex: 1,
-  },
-  skipContainer: {
-    alignItems: 'flex-end',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-  },
-  skipButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  skipText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  onboardingContent: {
-    flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  iconContainer: {
-    marginBottom: 48,
-  },
-  iconBlur: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
     alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
   },
-  textContainer: {
+  loadingContent: {
     alignItems: 'center',
-    marginBottom: 48,
   },
-  onboardingTitle: {
-    fontSize: 28,
+  loadingTitle: {
+    fontSize: 32,
     fontWeight: 'bold',
     color: 'white',
-    textAlign: 'center',
-    marginBottom: 16,
+    marginTop: 16,
   },
-  onboardingSubtitle: {
+  loadingSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    lineHeight: 24,
+    marginBottom: 32,
   },
-  progressContainer: {
+  loadingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  progressDot: {
+  loadingDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: 4,
-  },
-  activeDot: {
     backgroundColor: 'white',
-    width: 24,
-  },
-  buttonContainer: {
-    paddingHorizontal: 32,
-    paddingBottom: 32,
-  },
-  nextButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  nextButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  buttonIcon: {
-    marginLeft: 4,
-  },
-  mainContainer: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
+    marginHorizontal: 4,
+    opacity: 0.7,
   },
   header: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
   },
-  welcomeText: {
-    fontSize: 14,
-    color: '#6c757d',
-    marginBottom: 2,
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerText: {
+    marginLeft: 12,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#212529',
+    color: 'white',
   },
-  profileButton: {
-    padding: 8,
+  headerSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerButton: {
+    marginLeft: 16,
+    padding: 4,
   },
   scrollView: {
     flex: 1,
   },
+  breakingNewsContainer: {
+    backgroundColor: BURKINA_COLORS.white,
+  },
+  urgentNewsBar: {
+    height: 32,
+    justifyContent: 'center',
+  },
+  liveNewsBar: {
+    height: 32,
+    justifyContent: 'center',
+  },
+  newsScroll: {
+    flex: 1,
+  },
+  urgentNewsText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    paddingHorizontal: 16,
+  },
+  liveNewsText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    paddingHorizontal: 16,
+  },
+  livePlayerContainer: {
+    backgroundColor: BURKINA_COLORS.white,
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  livePlayerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: BURKINA_COLORS.dark,
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: BURKINA_COLORS.accent,
+    marginRight: 8,
+  },
+  liveText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  fullscreenButton: {
+    padding: 4,
+  },
+  videoPlayerPlaceholder: {
+    height: 200,
+    backgroundColor: BURKINA_COLORS.dark,
+  },
+  playerGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playerTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  playerSubtitle: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  categoryContainer: {
+    paddingVertical: 16,
+  },
+  categoryContent: {
+    paddingHorizontal: 16,
+  },
+  categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: BURKINA_COLORS.white,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: BURKINA_COLORS.primary,
+  },
+  categoryButtonActive: {
+    backgroundColor: BURKINA_COLORS.primary,
+  },
+  categoryText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '500',
+    color: BURKINA_COLORS.primary,
+  },
+  categoryTextActive: {
+    color: 'white',
+  },
+  sectionHeader: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#212529',
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
+    color: BURKINA_COLORS.dark,
   },
-  featuredScroll: {
-    paddingLeft: 24,
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 2,
   },
-  featuredScrollContent: {
-    paddingRight: 24,
+  videosGrid: {
+    paddingHorizontal: 16,
   },
-  featuredCard: {
-    width: width * 0.8,
-    height: 200,
-    borderRadius: 16,
-    marginRight: 16,
+  videoCard: {
+    backgroundColor: BURKINA_COLORS.white,
+    borderRadius: 12,
+    marginBottom: 16,
     overflow: 'hidden',
-  },
-  firstCard: {
-    marginLeft: 0,
-  },
-  featuredCardGradient: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'space-between',
-  },
-  featuredCardContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  featuredCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  featuredCardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    flex: 1,
-    marginRight: 12,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  ratingText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  featuredCardDescription: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    lineHeight: 20,
-    marginVertical: 8,
-  },
-  modalityContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginVertical: 8,
-  },
-  modalityTag: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 6,
-    marginBottom: 4,
-  },
-  modalityText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  budgetText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    marginBottom: 8,
-  },
-  quickActionCard: {
-    flex: 1,
-    height: 100,
-    borderRadius: 12,
-    marginHorizontal: 4,
-    overflow: 'hidden',
-  },
-  quickActionGradient: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  campaignCard: {
-    backgroundColor: 'white',
-    marginHorizontal: 24,
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 16,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowRadius: 2,
   },
-  campaignCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  videoThumbnailContainer: {
+    height: 180,
+    position: 'relative',
   },
-  campaignCardLeft: {
+  thumbnailPlaceholder: {
     flex: 1,
-    marginRight: 16,
+    backgroundColor: '#e5e7eb',
   },
-  campaignCardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#212529',
-    marginBottom: 4,
-  },
-  campaignCardDescription: {
-    fontSize: 14,
-    color: '#6c757d',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  campaignCardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  thumbnailGradient: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  modalityTagSmall: {
-    backgroundColor: '#e9ecef',
+  videoDurationBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 6,
-    marginRight: 4,
+    borderRadius: 4,
   },
-  modalityTextSmall: {
-    color: '#495057',
-    fontSize: 10,
-    fontWeight: '500',
-  },
-  moreModalities: {
-    fontSize: 10,
-    color: '#6c757d',
-    marginLeft: 4,
-  },
-  ratingContainerSmall: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingTextSmall: {
-    color: '#495057',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  campaignCardRight: {
-    alignItems: 'flex-end',
-  },
-  budgetTextSmall: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#667eea',
-    marginBottom: 8,
-  },
-  orderButton: {
-    backgroundColor: '#667eea',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  orderButtonText: {
+  videoDurationText: {
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
+  },
+  liveBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: BURKINA_COLORS.accent,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  liveBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'white',
+    marginRight: 4,
+  },
+  liveBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  videoInfo: {
+    padding: 16,
+  },
+  videoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: BURKINA_COLORS.dark,
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  videoMeta: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  videoCategoryBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: BURKINA_COLORS.secondary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  videoCategoryText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: BURKINA_COLORS.dark,
+  },
+  footer: {
+    marginTop: 32,
+  },
+  footerGradient: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  footerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+  },
+  footerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  footerStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  footerStat: {
+    alignItems: 'center',
+  },
+  footerStatNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: BURKINA_COLORS.secondary,
+  },
+  footerStatLabel: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
   },
 });

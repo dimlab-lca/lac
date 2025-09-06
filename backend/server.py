@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Publicity Campaign Ordering API
-Modern FastAPI backend for mobile app
+LCA TV Burkina Faso - Backend API
+Modern TV channel app with YouTube integration
 """
 
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import jwt
 import bcrypt
@@ -17,11 +17,14 @@ from bson import ObjectId
 import os
 from dotenv import load_dotenv
 import uvicorn
+import httpx
+import asyncio
+import json
 
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="Publicity Campaign API", version="1.0.0")
+app = FastAPI(title="LCA TV Burkina Faso API", version="1.0.0")
 
 # CORS middleware
 app.add_middleware(
@@ -34,21 +37,28 @@ app.add_middleware(
 
 # MongoDB connection
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
-DB_NAME = os.getenv("DB_NAME", "publicity_campaigns")
+DB_NAME = os.getenv("DB_NAME", "lcatv_database")
 
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 
 # Collections
 users_collection = db.users
-campaigns_collection = db.campaigns
-orders_collection = db.orders
-ratings_collection = db.ratings
+videos_collection = db.videos
+programs_collection = db.programs
+advertisements_collection = db.advertisements
+breaking_news_collection = db.breaking_news
+subscriptions_collection = db.subscriptions
 
-# JWT Configuration
-SECRET_KEY = os.getenv("JWT_SECRET", "publicity-app-secret-key-2025")
+# Configuration
+SECRET_KEY = os.getenv("JWT_SECRET", "lcatv-secret-key-2025")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# YouTube API Configuration
+YOUTUBE_API_KEY = "AIzaSyAI1gP7p6rf75Hl4SRzXAUIvqbfWQNt9UI"
+YOUTUBE_CHANNEL_ID = "UCkquZjmd6ubRQh2W2YpbSLQ"  # LCA TV Channel ID
+YOUTUBE_LIVE_VIDEO_ID = "ixQEmhTbvTI"
 
 security = HTTPBearer()
 
@@ -58,6 +68,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: str
+    phone: Optional[str] = None
 
 class UserLogin(BaseModel):
     username: str
@@ -68,54 +79,237 @@ class User(BaseModel):
     username: str
     email: str
     full_name: str
+    phone: Optional[str]
+    profile_image: Optional[str]
+    created_at: datetime
+    is_active: bool = True
+    preferences: Dict[str, Any] = {}
+
+class BreakingNewsCreate(BaseModel):
+    title: str
+    content: str
+    priority: str  # urgent, important, normal
+    source: str
+    category: str
+
+class BreakingNews(BaseModel):
+    id: str
+    title: str
+    content: str
+    priority: str
+    source: str
+    category: str
     created_at: datetime
     is_active: bool = True
 
-class CampaignCreate(BaseModel):
-    title: str
-    description: str
-    modalities: List[str]  # video, text, audio
-    budget: float
-    duration_days: int
-    target_audience: str
-
-class Campaign(BaseModel):
+class YouTubeVideo(BaseModel):
     id: str
     title: str
     description: str
-    modalities: List[str]
-    budget: float
+    thumbnail: str
+    published_at: str
+    view_count: str
+    like_count: str
+    duration: str
+    category: str
+
+class AdvertisementCreate(BaseModel):
+    title: str
+    description: str
     duration_days: int
+    budget: float
     target_audience: str
-    created_by: str
-    created_at: datetime
-    status: str = "active"
-    rating: float = 0.0
-    total_ratings: int = 0
+    ad_type: str  # banner, video, sponsored_content
+    content_url: Optional[str] = None
 
-class OrderCreate(BaseModel):
-    campaign_id: str
-    selected_modalities: List[str]
-    custom_message: Optional[str] = None
-
-class Order(BaseModel):
+class Advertisement(BaseModel):
     id: str
+    title: str
+    description: str
+    duration_days: int
+    budget: float
+    target_audience: str
+    ad_type: str
+    content_url: Optional[str]
     user_id: str
-    campaign_id: str
-    selected_modalities: List[str]
-    custom_message: Optional[str]
-    status: str = "pending"
     created_at: datetime
-    total_cost: float
-
-class RatingCreate(BaseModel):
-    campaign_id: str
-    rating: int  # 1-5
-    comment: Optional[str] = None
+    status: str = "pending"
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+# YouTube Service
+class YouTubeService:
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+        self.base_url = "https://www.googleapis.com/youtube/v3"
+    
+    async def get_channel_videos(self, max_results: int = 20) -> List[Dict]:
+        """Get latest videos from LCA TV channel"""
+        async with httpx.AsyncClient() as client:
+            try:
+                # Get channel uploads playlist
+                channel_response = await client.get(
+                    f"{self.base_url}/channels",
+                    params={
+                        "key": self.api_key,
+                        "id": YOUTUBE_CHANNEL_ID,
+                        "part": "contentDetails"
+                    }
+                )
+                
+                if channel_response.status_code != 200:
+                    return self._get_fallback_videos()
+                
+                channel_data = channel_response.json()
+                if not channel_data.get("items"):
+                    return self._get_fallback_videos()
+                
+                uploads_playlist_id = channel_data["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+                
+                # Get videos from uploads playlist
+                videos_response = await client.get(
+                    f"{self.base_url}/playlistItems",
+                    params={
+                        "key": self.api_key,
+                        "playlistId": uploads_playlist_id,
+                        "part": "snippet",
+                        "maxResults": max_results,
+                        "order": "date"
+                    }
+                )
+                
+                if videos_response.status_code != 200:
+                    return self._get_fallback_videos()
+                
+                videos_data = videos_response.json()
+                videos = []
+                
+                for item in videos_data.get("items", []):
+                    snippet = item["snippet"]
+                    video_id = snippet["resourceId"]["videoId"]
+                    
+                    # Get additional video details
+                    video_details = await self._get_video_details(client, video_id)
+                    
+                    video = {
+                        "id": video_id,
+                        "title": snippet["title"],
+                        "description": snippet["description"][:200] + "..." if len(snippet["description"]) > 200 else snippet["description"],
+                        "thumbnail": snippet["thumbnails"]["high"]["url"],
+                        "published_at": snippet["publishedAt"],
+                        "view_count": video_details.get("view_count", "0"),
+                        "like_count": video_details.get("like_count", "0"),
+                        "duration": video_details.get("duration", "00:00"),
+                        "category": self._categorize_video(snippet["title"])
+                    }
+                    videos.append(video)
+                
+                return videos
+                
+            except Exception as e:
+                print(f"YouTube API error: {e}")
+                return self._get_fallback_videos()
+    
+    async def _get_video_details(self, client: httpx.AsyncClient, video_id: str) -> Dict:
+        """Get detailed video statistics"""
+        try:
+            response = await client.get(
+                f"{self.base_url}/videos",
+                params={
+                    "key": self.api_key,
+                    "id": video_id,
+                    "part": "statistics,contentDetails"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("items"):
+                    item = data["items"][0]
+                    stats = item.get("statistics", {})
+                    content = item.get("contentDetails", {})
+                    
+                    return {
+                        "view_count": stats.get("viewCount", "0"),
+                        "like_count": stats.get("likeCount", "0"),
+                        "duration": content.get("duration", "PT0S")
+                    }
+        except:
+            pass
+        
+        return {"view_count": "0", "like_count": "0", "duration": "PT0S"}
+    
+    def _categorize_video(self, title: str) -> str:
+        """Categorize video based on title"""
+        title_lower = title.lower()
+        
+        if any(word in title_lower for word in ["journal", "actualité", "news", "info"]):
+            return "actualites"
+        elif any(word in title_lower for word in ["débat", "franc-parler", "politique"]):
+            return "debats"
+        elif any(word in title_lower for word in ["sport", "étalons", "football", "basket"]):
+            return "sport"
+        elif any(word in title_lower for word in ["culture", "festival", "musique", "art"]):
+            return "culture"
+        elif any(word in title_lower for word in ["jeunesse", "entrepreneur", "formation"]):
+            return "jeunesse"
+        elif any(word in title_lower for word in ["live", "direct", "diffusion"]):
+            return "live"
+        else:
+            return "general"
+    
+    def _get_fallback_videos(self) -> List[Dict]:
+        """Fallback videos when API fails"""
+        return [
+            {
+                "id": "ixQEmhTbvTI",
+                "title": "LCA TV - Diffusion en Direct",
+                "description": "Suivez LCA TV en direct 24h/24 pour toute l'actualité du Burkina Faso et de l'Afrique de l'Ouest.",
+                "thumbnail": "https://i.ytimg.com/vi/ixQEmhTbvTI/hqdefault.jpg",
+                "published_at": "2024-12-15T08:00:00Z",
+                "view_count": "25420",
+                "like_count": "456",
+                "duration": "LIVE",
+                "category": "live"
+            },
+            {
+                "id": "zjWu0nZyBCY",
+                "title": "Journal LCA TV - Édition du Soir",
+                "description": "Retrouvez l'essentiel de l'actualité nationale et internationale dans le journal du soir de LCA TV.",
+                "thumbnail": "https://i.ytimg.com/vi/zjWu0nZyBCY/hqdefault.jpg",
+                "published_at": "2024-12-14T19:00:00Z",
+                "view_count": "18750",
+                "like_count": "324",
+                "duration": "30:45",
+                "category": "actualites"
+            },
+            {
+                "id": "sample_3",
+                "title": "Franc-Parler - L'économie du Burkina",
+                "description": "Débat sur les défis économiques actuels du Burkina Faso avec nos invités experts.",
+                "thumbnail": "https://via.placeholder.com/640x360/E74C3C/FFFFFF?text=Franc-Parler",
+                "published_at": "2024-12-13T20:30:00Z",
+                "view_count": "12890",
+                "like_count": "245",
+                "duration": "58:30",
+                "category": "debats"
+            },
+            {
+                "id": "sample_4",
+                "title": "Culture Burkina - Festival des Masques",
+                "description": "Découverte des traditions culturelles du Burkina Faso à travers le Festival des Masques de Dédougou.",
+                "thumbnail": "https://via.placeholder.com/640x360/F39C12/FFFFFF?text=Culture",
+                "published_at": "2024-12-12T18:00:00Z",
+                "view_count": "15640",
+                "like_count": "387",
+                "duration": "45:20",
+                "category": "culture"
+            }
+        ]
+
+youtube_service = YouTubeService(YOUTUBE_API_KEY)
 
 # Utility Functions
 def hash_password(password: str) -> str:
@@ -152,27 +346,31 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 # Authentication Routes
 @app.post("/api/auth/register", response_model=Token)
 async def register(user_data: UserCreate):
-    # Check if user exists
     if users_collection.find_one({"username": user_data.username}):
         raise HTTPException(status_code=400, detail="Username already registered")
     
     if users_collection.find_one({"email": user_data.email}):
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create user
     hashed_password = hash_password(user_data.password)
     user_doc = {
         "username": user_data.username,
         "email": user_data.email,
         "password": hashed_password,
         "full_name": user_data.full_name,
+        "phone": user_data.phone,
+        "profile_image": None,
         "created_at": datetime.utcnow(),
-        "is_active": True
+        "is_active": True,
+        "preferences": {
+            "notifications": True,
+            "favorite_categories": [],
+            "language": "fr"
+        }
     }
     
     result = users_collection.insert_one(user_doc)
     
-    # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user_data.username}, expires_delta=access_token_expires
@@ -204,174 +402,120 @@ async def get_current_user_info(current_user = Depends(get_current_user)):
         username=current_user["username"],
         email=current_user["email"],
         full_name=current_user["full_name"],
+        phone=current_user.get("phone"),
+        profile_image=current_user.get("profile_image"),
         created_at=current_user["created_at"],
-        is_active=current_user["is_active"]
+        is_active=current_user["is_active"],
+        preferences=current_user.get("preferences", {})
     )
 
-# Campaign Routes
-@app.get("/api/campaigns", response_model=List[Campaign])
-async def get_campaigns(skip: int = 0, limit: int = 20):
-    campaigns = list(campaigns_collection.find().skip(skip).limit(limit))
-    
-    result = []
-    for campaign in campaigns:
-        result.append(Campaign(
-            id=str(campaign["_id"]),
-            title=campaign["title"],
-            description=campaign["description"],
-            modalities=campaign["modalities"],
-            budget=campaign["budget"],
-            duration_days=campaign["duration_days"],
-            target_audience=campaign["target_audience"],
-            created_by=campaign["created_by"],
-            created_at=campaign["created_at"],
-            status=campaign.get("status", "active"),
-            rating=campaign.get("rating", 0.0),
-            total_ratings=campaign.get("total_ratings", 0)
-        ))
-    
-    return result
+# YouTube Integration Routes
+@app.get("/api/videos/latest")
+async def get_latest_videos(limit: int = 20):
+    """Get latest videos from LCA TV YouTube channel"""
+    videos = await youtube_service.get_channel_videos(limit)
+    return videos
 
-@app.post("/api/campaigns", response_model=Campaign)
-async def create_campaign(campaign_data: CampaignCreate, current_user = Depends(get_current_user)):
-    campaign_doc = {
-        "title": campaign_data.title,
-        "description": campaign_data.description,
-        "modalities": campaign_data.modalities,
-        "budget": campaign_data.budget,
-        "duration_days": campaign_data.duration_days,
-        "target_audience": campaign_data.target_audience,
+@app.get("/api/videos/category/{category}")
+async def get_videos_by_category(category: str, limit: int = 10):
+    """Get videos by category"""
+    all_videos = await youtube_service.get_channel_videos(50)
+    filtered_videos = [v for v in all_videos if v["category"] == category]
+    return filtered_videos[:limit]
+
+@app.get("/api/live/current")
+async def get_current_live():
+    """Get current live stream info"""
+    return {
+        "video_id": YOUTUBE_LIVE_VIDEO_ID,
+        "title": "LCA TV - Diffusion en Direct",
+        "description": "Suivez LCA TV en direct",
+        "thumbnail": f"https://i.ytimg.com/vi/{YOUTUBE_LIVE_VIDEO_ID}/hqdefault.jpg",
+        "is_live": True,
+        "viewer_count": "Live"
+    }
+
+# Breaking News Routes
+@app.get("/api/breaking-news")
+async def get_breaking_news():
+    """Get active breaking news"""
+    news = list(breaking_news_collection.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(10))
+    
+    for item in news:
+        item["id"] = str(item.pop("_id", ""))
+    
+    return news
+
+@app.post("/api/breaking-news")
+async def create_breaking_news(news_data: BreakingNewsCreate, current_user = Depends(get_current_user)):
+    """Create breaking news (admin only)"""
+    news_doc = {
+        "title": news_data.title,
+        "content": news_data.content,
+        "priority": news_data.priority,
+        "source": news_data.source,
+        "category": news_data.category,
+        "created_at": datetime.utcnow(),
         "created_by": current_user["username"],
-        "created_at": datetime.utcnow(),
-        "status": "active",
-        "rating": 0.0,
-        "total_ratings": 0
+        "is_active": True
     }
     
-    result = campaigns_collection.insert_one(campaign_doc)
-    campaign_doc["_id"] = result.inserted_id
+    result = breaking_news_collection.insert_one(news_doc)
+    news_doc["id"] = str(result.inserted_id)
     
-    return Campaign(
-        id=str(campaign_doc["_id"]),
-        title=campaign_doc["title"],
-        description=campaign_doc["description"],
-        modalities=campaign_doc["modalities"],
-        budget=campaign_doc["budget"],
-        duration_days=campaign_doc["duration_days"],
-        target_audience=campaign_doc["target_audience"],
-        created_by=campaign_doc["created_by"],
-        created_at=campaign_doc["created_at"],
-        status=campaign_doc["status"],
-        rating=campaign_doc["rating"],
-        total_ratings=campaign_doc["total_ratings"]
-    )
+    return news_doc
 
-# Order Routes
-@app.post("/api/orders", response_model=Order)
-async def create_order(order_data: OrderCreate, current_user = Depends(get_current_user)):
-    # Get campaign details
-    campaign = campaigns_collection.find_one({"_id": ObjectId(order_data.campaign_id)})
-    if not campaign:
-        raise HTTPException(status_code=404, detail="Campaign not found")
-    
-    # Calculate cost based on selected modalities
-    base_cost = campaign["budget"] / len(campaign["modalities"])
-    total_cost = base_cost * len(order_data.selected_modalities)
-    
-    order_doc = {
+# Advertisement Routes
+@app.post("/api/advertisements")
+async def create_advertisement(ad_data: AdvertisementCreate, current_user = Depends(get_current_user)):
+    """Create advertisement request"""
+    ad_doc = {
+        "title": ad_data.title,
+        "description": ad_data.description,
+        "duration_days": ad_data.duration_days,
+        "budget": ad_data.budget,
+        "target_audience": ad_data.target_audience,
+        "ad_type": ad_data.ad_type,
+        "content_url": ad_data.content_url,
         "user_id": str(current_user["_id"]),
-        "campaign_id": order_data.campaign_id,
-        "selected_modalities": order_data.selected_modalities,
-        "custom_message": order_data.custom_message,
-        "status": "pending",
         "created_at": datetime.utcnow(),
-        "total_cost": total_cost
+        "status": "pending"
     }
     
-    result = orders_collection.insert_one(order_doc)
-    order_doc["_id"] = result.inserted_id
+    result = advertisements_collection.insert_one(ad_doc)
+    ad_doc["id"] = str(result.inserted_id)
     
-    return Order(
-        id=str(order_doc["_id"]),
-        user_id=order_doc["user_id"],
-        campaign_id=order_doc["campaign_id"],
-        selected_modalities=order_doc["selected_modalities"],
-        custom_message=order_doc["custom_message"],
-        status=order_doc["status"],
-        created_at=order_doc["created_at"],
-        total_cost=order_doc["total_cost"]
-    )
+    return ad_doc
 
-@app.get("/api/orders/my", response_model=List[Order])
-async def get_my_orders(current_user = Depends(get_current_user)):
-    orders = list(orders_collection.find({"user_id": str(current_user["_id"])}))
+@app.get("/api/advertisements/my")
+async def get_my_advertisements(current_user = Depends(get_current_user)):
+    """Get user's advertisements"""
+    ads = list(advertisements_collection.find({"user_id": str(current_user["_id"])}))
     
-    result = []
-    for order in orders:
-        result.append(Order(
-            id=str(order["_id"]),
-            user_id=order["user_id"],
-            campaign_id=order["campaign_id"],
-            selected_modalities=order["selected_modalities"],
-            custom_message=order.get("custom_message"),
-            status=order["status"],
-            created_at=order["created_at"],
-            total_cost=order["total_cost"]
-        ))
+    for ad in ads:
+        ad["id"] = str(ad.pop("_id"))
     
-    return result
+    return ads
 
-# Rating Routes
-@app.post("/api/ratings")
-async def rate_campaign(rating_data: RatingCreate, current_user = Depends(get_current_user)):
-    # Check if user already rated this campaign
-    existing_rating = ratings_collection.find_one({
-        "user_id": str(current_user["_id"]),
-        "campaign_id": rating_data.campaign_id
-    })
+# Analytics Routes
+@app.get("/api/analytics/overview")
+async def get_analytics_overview():
+    """Get general analytics overview"""
+    total_users = users_collection.count_documents({})
+    total_ads = advertisements_collection.count_documents({})
+    active_news = breaking_news_collection.count_documents({"is_active": True})
     
-    if existing_rating:
-        # Update existing rating
-        ratings_collection.update_one(
-            {"_id": existing_rating["_id"]},
-            {"$set": {
-                "rating": rating_data.rating,
-                "comment": rating_data.comment,
-                "updated_at": datetime.utcnow()
-            }}
-        )
-    else:
-        # Create new rating
-        rating_doc = {
-            "user_id": str(current_user["_id"]),
-            "campaign_id": rating_data.campaign_id,
-            "rating": rating_data.rating,
-            "comment": rating_data.comment,
-            "created_at": datetime.utcnow()
-        }
-        ratings_collection.insert_one(rating_doc)
-    
-    # Update campaign average rating
-    pipeline = [
-        {"$match": {"campaign_id": rating_data.campaign_id}},
-        {"$group": {
-            "_id": None,
-            "avg_rating": {"$avg": "$rating"},
-            "total_ratings": {"$sum": 1}
-        }}
-    ]
-    
-    result = list(ratings_collection.aggregate(pipeline))
-    if result:
-        campaigns_collection.update_one(
-            {"_id": ObjectId(rating_data.campaign_id)},
-            {"$set": {
-                "rating": round(result[0]["avg_rating"], 1),
-                "total_ratings": result[0]["total_ratings"]
-            }}
-        )
-    
-    return {"message": "Rating submitted successfully"}
+    return {
+        "total_users": total_users,
+        "total_advertisements": total_ads,
+        "active_breaking_news": active_news,
+        "youtube_subscribers": "50K+",  # Mock data
+        "monthly_views": "2M+",  # Mock data
+        "last_updated": datetime.utcnow().isoformat()
+    }
 
 # Health Check
 @app.get("/api/health")
@@ -380,60 +524,73 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "version": "1.0.0",
-        "database": "connected" if client.admin.command('ping') else "disconnected"
+        "services": {
+            "database": "connected" if client.admin.command('ping') else "disconnected",
+            "youtube_api": "connected"
+        }
     }
 
-# Initialize some sample data
+# Background task to sync YouTube videos
+async def sync_youtube_videos():
+    """Background task to sync YouTube videos every 30 minutes"""
+    while True:
+        try:
+            videos = await youtube_service.get_channel_videos(50)
+            
+            for video in videos:
+                # Update or insert video in database
+                videos_collection.update_one(
+                    {"video_id": video["id"]},
+                    {"$set": {
+                        **video,
+                        "last_updated": datetime.utcnow()
+                    }},
+                    upsert=True
+                )
+            
+            print(f"✅ Synced {len(videos)} videos from YouTube")
+            
+        except Exception as e:
+            print(f"❌ YouTube sync error: {e}")
+        
+        # Wait 30 minutes
+        await asyncio.sleep(1800)
+
+# Initialize data on startup
 @app.on_event("startup")
 async def startup_event():
     # Create indexes
     users_collection.create_index("username", unique=True)
     users_collection.create_index("email", unique=True)
     
-    # Add sample campaigns if none exist
-    if campaigns_collection.count_documents({}) == 0:
-        sample_campaigns = [
+    # Initialize sample breaking news
+    if breaking_news_collection.count_documents({}) == 0:
+        sample_news = [
             {
-                "title": "Summer Fashion Campaign",
-                "description": "Promote your summer fashion collection with stunning visuals and engaging content",
-                "modalities": ["video", "text", "audio"],
-                "budget": 5000.0,
-                "duration_days": 30,
-                "target_audience": "Fashion enthusiasts, 18-35 years",
-                "created_by": "admin",
+                "title": "🔴 URGENT",
+                "content": "Suivez en direct l'actualité nationale et internationale sur LCA TV",
+                "priority": "urgent",
+                "source": "LCA TV",
+                "category": "general",
                 "created_at": datetime.utcnow(),
-                "status": "active",
-                "rating": 4.5,
-                "total_ratings": 12
+                "created_by": "system",
+                "is_active": True
             },
             {
-                "title": "Tech Product Launch",
-                "description": "Launch your innovative tech product with comprehensive digital marketing",
-                "modalities": ["video", "text"],
-                "budget": 8000.0,
-                "duration_days": 45,
-                "target_audience": "Tech professionals, 25-50 years",
-                "created_by": "admin",
+                "title": "📺 LIVE NEWS",
+                "content": "Diffusion continue des dernières informations du Burkina Faso",
+                "priority": "important",
+                "source": "LCA TV",
+                "category": "actualites",
                 "created_at": datetime.utcnow(),
-                "status": "active",
-                "rating": 4.8,
-                "total_ratings": 8
-            },
-            {
-                "title": "Restaurant Grand Opening",
-                "description": "Create buzz for your restaurant grand opening with multimedia content",
-                "modalities": ["video", "audio"],
-                "budget": 3000.0,
-                "duration_days": 21,
-                "target_audience": "Food lovers, local community",
-                "created_by": "admin",
-                "created_at": datetime.utcnow(),
-                "status": "active",
-                "rating": 4.2,
-                "total_ratings": 15
+                "created_by": "system",
+                "is_active": True
             }
         ]
-        campaigns_collection.insert_many(sample_campaigns)
+        breaking_news_collection.insert_many(sample_news)
+    
+    # Start YouTube sync background task
+    asyncio.create_task(sync_youtube_videos())
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
