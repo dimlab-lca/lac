@@ -84,83 +84,169 @@ export default function EmissionsScreen() {
   };
 
   const categorizeVideos = (videos: YouTubeVideo[]): VideoCategory[] => {
-    // Créer des catégories basées sur les mots-clés dans les titres
-    const categories: VideoCategory[] = [
+    // Identifier automatiquement les rubriques basées sur les vrais titres des vidéos
+    const rubriques: VideoCategory[] = [
       {
         key: 'recent',
-        label: 'Nouvelles Émissions',
-        icon: 'sparkles',
+        label: 'Dernières Émissions',
+        icon: 'time',
         color: BURKINA_COLORS.accent,
-        videos: videos.slice(0, 10)
-      },
+        videos: videos.slice(0, 8)
+      }
+    ];
+
+    // Détection automatique des rubriques principales de LCA TV
+    const rubriquesMap = new Map<string, YouTubeVideo[]>();
+
+    videos.forEach(video => {
+      const title = video.title.toLowerCase();
+      
+      // Check Point de LCA
+      if (title.includes('check point') || title.includes('checkpoint')) {
+        if (!rubriquesMap.has('checkpoint')) rubriquesMap.set('checkpoint', []);
+        rubriquesMap.get('checkpoint')!.push(video);
+      }
+      
+      // Ça Plane Là (CPL)
+      else if (title.includes('cpl ') || title.includes('ça plane là')) {
+        if (!rubriquesMap.has('cpl')) rubriquesMap.set('cpl', []);
+        rubriquesMap.get('cpl')!.push(video);
+      }
+      
+      // Franc Parler
+      else if (title.includes('franc parler') || title.includes('francparler')) {
+        if (!rubriquesMap.has('francparler')) rubriquesMap.set('francparler', []);
+        rubriquesMap.get('francparler')!.push(video);
+      }
+      
+      // Journal / Actualités Burkina Faso
+      else if (title.includes('burkina faso:') || title.includes('burkina faso ')) {
+        if (!rubriquesMap.has('journal_bf')) rubriquesMap.set('journal_bf', []);
+        rubriquesMap.get('journal_bf')!.push(video);
+      }
+      
+      // Actualités Mali
+      else if (title.includes('mali :') || title.includes('mali ')) {
+        if (!rubriquesMap.has('mali')) rubriquesMap.set('mali', []);
+        rubriquesMap.get('mali')!.push(video);
+      }
+      
+      // Actualités Côte d'Ivoire
+      else if (title.includes('côte d\'ivoire') || title.includes('cote d\'ivoire')) {
+        if (!rubriquesMap.has('cote_ivoire')) rubriquesMap.set('cote_ivoire', []);
+        rubriquesMap.get('cote_ivoire')!.push(video);
+      }
+      
+      // Messages officiels / Présidence
+      else if (title.includes('message de son excellence') || title.includes('président du faso') || title.includes('officiel :')) {
+        if (!rubriquesMap.has('officiel')) rubriquesMap.set('officiel', []);
+        rubriquesMap.get('officiel')!.push(video);
+      }
+      
+      // Autres pays africains
+      else if (title.includes('tunisie:') || title.includes('égypte :') || title.includes('soudan :') || title.includes('afrique du sud')) {
+        if (!rubriquesMap.has('afrique')) rubriquesMap.set('afrique', []);
+        rubriquesMap.get('afrique')!.push(video);
+      }
+      
+      // Culture / Événements
+      else if (title.includes('camp vacances') || title.includes('reconstitution') || title.includes('coopération')) {
+        if (!rubriquesMap.has('culture')) rubriquesMap.set('culture', []);
+        rubriquesMap.get('culture')!.push(video);
+      }
+    });
+
+    // Convertir en catégories avec métadonnées
+    const rubriqueDefinitions = [
       {
-        key: 'actualites',
-        label: 'Actualités & Journal',
-        icon: 'newspaper',
+        key: 'checkpoint',
+        label: 'Check Point de LCA',
+        icon: 'radio',
         color: BURKINA_COLORS.primary,
-        videos: videos.filter(v => 
-          v.title.toLowerCase().includes('actualité') ||
-          v.title.toLowerCase().includes('journal') ||
-          v.title.toLowerCase().includes('news') ||
-          v.title.toLowerCase().includes('info')
-        )
+        description: 'Émission phare avec interviews et débats'
       },
       {
-        key: 'debats',
-        label: 'Débats & Politique',
+        key: 'cpl',
+        label: 'Ça Plane Là (CPL)',
         icon: 'chatbubbles',
         color: BURKINA_COLORS.secondary,
-        videos: videos.filter(v => 
-          v.title.toLowerCase().includes('débat') ||
-          v.title.toLowerCase().includes('politique') ||
-          v.title.toLowerCase().includes('discussion')
-        )
+        description: 'Discussions et analyses avec experts'
+      },
+      {
+        key: 'francparler',
+        label: 'Franc Parler',
+        icon: 'megaphone',
+        color: BURKINA_COLORS.accent,
+        description: 'Débats politiques et sociaux'
+      },
+      {
+        key: 'journal_bf',
+        label: 'Journal Burkina Faso',
+        icon: 'newspaper',
+        color: BURKINA_COLORS.primary,
+        description: 'Actualités nationales du Burkina Faso'
+      },
+      {
+        key: 'mali',
+        label: 'Actualités Mali',
+        icon: 'globe',
+        color: BURKINA_COLORS.secondary,
+        description: 'Informations du Mali voisin'
+      },
+      {
+        key: 'cote_ivoire',
+        label: 'Actualités Côte d\'Ivoire',
+        icon: 'location',
+        color: BURKINA_COLORS.accent,
+        description: 'Nouvelles de Côte d\'Ivoire'
+      },
+      {
+        key: 'officiel',
+        label: 'Messages Officiels',
+        icon: 'podium',
+        color: BURKINA_COLORS.primary,
+        description: 'Communications officielles et présidentielles'
+      },
+      {
+        key: 'afrique',
+        label: 'Afrique International',
+        icon: 'earth',
+        color: BURKINA_COLORS.secondary,
+        description: 'Actualités du continent africain'
       },
       {
         key: 'culture',
         label: 'Culture & Société',
         icon: 'musical-notes',
         color: BURKINA_COLORS.accent,
-        videos: videos.filter(v => 
-          v.title.toLowerCase().includes('culture') ||
-          v.title.toLowerCase().includes('tradition') ||
-          v.title.toLowerCase().includes('société')
-        )
-      },
-      {
-        key: 'sport',
-        label: 'Sport',
-        icon: 'football',
-        color: BURKINA_COLORS.primary,
-        videos: videos.filter(v => 
-          v.title.toLowerCase().includes('sport') ||
-          v.title.toLowerCase().includes('football') ||
-          v.title.toLowerCase().includes('étalons')
-        )
-      },
-      {
-        key: 'populaire',
-        label: 'Le Plus Regardé',
-        icon: 'trending-up',
-        color: BURKINA_COLORS.secondary,
-        videos: videos.sort((a, b) => parseInt(b.view_count) - parseInt(a.view_count)).slice(0, 10)
-      },
-      {
-        key: 'education',
-        label: 'Éducation & Jeunesse',
-        icon: 'school',
-        color: BURKINA_COLORS.primary,
-        videos: videos.filter(v => 
-          v.title.toLowerCase().includes('éducation') ||
-          v.title.toLowerCase().includes('jeune') ||
-          v.title.toLowerCase().includes('étudiant') ||
-          v.title.toLowerCase().includes('formation')
-        )
+        description: 'Événements culturels et sociaux'
       }
     ];
 
-    // Filtrer les catégories qui ont au moins 3 vidéos
-    return categories.filter(cat => cat.videos.length >= 3);
+    // Ajouter les catégories qui ont des vidéos (minimum 2 vidéos par rubrique)
+    rubriqueDefinitions.forEach(def => {
+      const videos = rubriquesMap.get(def.key);
+      if (videos && videos.length >= 2) {
+        rubriques.push({
+          key: def.key,
+          label: def.label,
+          icon: def.icon,
+          color: def.color,
+          videos: videos.slice(0, 12) // Maximum 12 vidéos par slider
+        });
+      }
+    });
+
+    // Ajouter "Plus Regardées" à la fin
+    rubriques.push({
+      key: 'populaire',
+      label: 'Plus Regardées',
+      icon: 'trending-up',
+      color: BURKINA_COLORS.primary,
+      videos: videos.sort((a, b) => parseInt(b.view_count) - parseInt(a.view_count)).slice(0, 10)
+    });
+
+    return rubriques;
   };
 
   const formatDuration = (duration: string): string => {
