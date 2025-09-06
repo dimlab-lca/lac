@@ -330,6 +330,10 @@ const styles = StyleSheet.create({
   videoPlayer: {
     height: 200,
   },
+  iframeContainer: {
+    flex: 1,
+    backgroundColor: BURKINA_COLORS.dark,
+  },
   webView: {
     flex: 1,
   },
