@@ -764,7 +764,7 @@ async def get_comments(video_id: str, limit: int = 50):
         }).sort("created_at", -1).limit(limit)
         
         comments = []
-        async for comment in comments_cursor:
+        for comment in comments_cursor:
             comments.append({
                 "id": str(comment["_id"]),
                 "video_id": comment["video_id"],
