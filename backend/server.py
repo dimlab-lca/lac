@@ -102,6 +102,13 @@ class BreakingNews(BaseModel):
     created_at: datetime
     is_active: bool = True
 
+class Comment(BaseModel):
+    video_id: str
+    content: str
+    user_name: Optional[str] = "Utilisateur Anonyme"
+    user_email: Optional[str] = None
+    created_at: Optional[datetime] = None
+
 class YouTubeVideo(BaseModel):
     id: str
     title: str
