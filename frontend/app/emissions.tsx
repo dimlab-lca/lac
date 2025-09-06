@@ -49,6 +49,16 @@ interface VideoCategory {
   videos: YouTubeVideo[];
 }
 
+interface Comment {
+  id: string;
+  video_id: string;
+  content: string;
+  user_name: string;
+  created_at: string;
+  likes: number;
+  time_ago: string;
+}
+
 export default function EmissionsScreen() {
   const [categories, setCategories] = useState<VideoCategory[]>([]);
   const [featuredVideo, setFeaturedVideo] = useState<YouTubeVideo | null>(null);
