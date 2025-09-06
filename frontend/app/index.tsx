@@ -1052,6 +1052,10 @@ const styles = StyleSheet.create({
   webViewPlayer: {
     flex: 1,
   },
+  iframeContainer: {
+    flex: 1,
+    backgroundColor: BURKINA_COLORS.dark,
+  },
   webViewLoading: {
     position: 'absolute',
     top: 0,
