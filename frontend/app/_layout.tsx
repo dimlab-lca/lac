@@ -393,9 +393,15 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginRight: 8,
   },
+  newBadge: {
+    backgroundColor: '#10b981',
+  },
   badgeText: {
     fontSize: 10,
     fontWeight: 'bold',
+    color: 'white',
+  },
+  newBadgeText: {
     color: 'white',
   },
   chevron: {
