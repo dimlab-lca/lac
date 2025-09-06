@@ -58,6 +58,14 @@ function CustomDrawerContent(props: any) {
       color: BURKINA_COLORS.accent
     },
     {
+      label: 'Télécharger Package',
+      icon: 'download-outline',
+      route: '/download-package',
+      color: '#10b981',
+      badge: 'NEW',
+      isDownload: true
+    },
+    {
       label: 'Contact',
       icon: 'mail-outline',
       route: '/contact',
