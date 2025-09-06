@@ -54,11 +54,20 @@ export default function EmissionsScreen() {
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   
   const navigation = useNavigation();
 
   useEffect(() => {
     loadVideosFromYouTube();
+    
+    // Auto-refresh toutes les 5 minutes pour détecter les nouvelles vidéos
+    const interval = setInterval(() => {
+      console.log('🔄 Vérification automatique de nouvelles vidéos...');
+      loadVideosFromYouTube();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadVideosFromYouTube = async () => {
