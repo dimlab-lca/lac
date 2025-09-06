@@ -207,3 +207,5 @@ agent_communication:
       message: "Phase 1 completed successfully: Modern mobile app with onboarding, campaign display, and full FastAPI backend. Ready for backend API testing before moving to authentication implementation."
     - agent: "testing"
       message: "✅ BACKEND TESTING COMPLETED SUCCESSFULLY: All 3 high-priority backend tasks are fully functional. Health check (✅), Authentication system (✅), Campaign management (✅), Order management (✅), Rating system (✅). 11/12 tests passed (91.7% success rate). Only minor CORS header detection issue which doesn't affect functionality. Backend APIs ready for production use."
+    - agent: "main"
+      message: "🔧 CRITICAL BUG FIX: User reported 'videos not play' issue. Root cause: Video players were showing placeholders instead of actual YouTube videos. SOLUTION: Implemented WebView components with YouTube embed URLs in both live.tsx and index.tsx. Videos now play properly when users click the play button. Added loading states and proper video controls."
