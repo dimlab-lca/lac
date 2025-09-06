@@ -488,6 +488,7 @@ async def create_advertisement(ad_data: AdvertisementCreate, current_user = Depe
     
     result = advertisements_collection.insert_one(ad_doc)
     ad_doc["id"] = str(result.inserted_id)
+    ad_doc.pop("_id", None)  # Remove the ObjectId field
     
     return ad_doc
 
