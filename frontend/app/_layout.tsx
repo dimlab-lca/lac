@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, Platform } from 'react-native';
 import { Drawer } from 'expo-router/drawer';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
