@@ -465,6 +465,10 @@ export default function LCATVApp() {
     </View>
   );
 
+  if (showWelcome) {
+    return renderWelcomePage();
+  }
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
