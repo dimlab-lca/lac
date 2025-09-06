@@ -1018,6 +1018,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
+  webViewPlayer: {
+    flex: 1,
+  },
+  webViewLoading: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: BURKINA_COLORS.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  webViewLoadingText: {
+    color: 'white',
+    fontSize: 14,
+    marginTop: 8,
+  },
   categoryContainer: {
     paddingVertical: 16,
   },
