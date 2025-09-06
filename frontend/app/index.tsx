@@ -1256,4 +1256,78 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 4,
   },
+
+  // Video Player Modal Styles
+  videoPlayerModal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    zIndex: 1000,
+  },
+  videoPlayerContainer: {
+    flex: 1,
+    backgroundColor: BURKINA_COLORS.dark,
+  },
+  videoPlayerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: BURKINA_COLORS.primary,
+  },
+  videoPlayerTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    marginRight: 12,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoPlayerContent: {
+    flex: 1,
+    backgroundColor: BURKINA_COLORS.dark,
+  },
+  videoPlayerWebView: {
+    flex: 1,
+  },
+  videoPlayerLoading: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: BURKINA_COLORS.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoPlayerLoadingText: {
+    color: 'white',
+    fontSize: 16,
+    marginTop: 12,
+  },
+  videoPlayerInfo: {
+    padding: 16,
+    backgroundColor: BURKINA_COLORS.white,
+  },
+  videoPlayerMeta: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  videoPlayerDescription: {
+    fontSize: 14,
+    color: BURKINA_COLORS.dark,
+    lineHeight: 20,
+  },
 });
