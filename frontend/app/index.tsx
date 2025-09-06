@@ -61,6 +61,7 @@ export default function LCATVApp() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showWelcome, setShowWelcome] = useState(true);
+  const [livePlayerActive, setLivePlayerActive] = useState(false);
   
   const navigation = useNavigation();
 
