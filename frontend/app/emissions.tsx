@@ -55,6 +55,7 @@ export default function EmissionsScreen() {
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   
   const navigation = useNavigation();
