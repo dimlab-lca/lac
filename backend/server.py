@@ -465,6 +465,7 @@ async def create_breaking_news(news_data: BreakingNewsCreate, current_user = Dep
     
     result = breaking_news_collection.insert_one(news_doc)
     news_doc["id"] = str(result.inserted_id)
+    news_doc.pop("_id", None)  # Remove the ObjectId field
     
     return news_doc
 
