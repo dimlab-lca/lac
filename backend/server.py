@@ -49,6 +49,7 @@ programs_collection = db.programs
 advertisements_collection = db.advertisements
 breaking_news_collection = db.breaking_news
 subscriptions_collection = db.subscriptions
+comments_collection = db.comments
 
 # Configuration
 SECRET_KEY = os.getenv("JWT_SECRET", "lcatv-secret-key-2025")
