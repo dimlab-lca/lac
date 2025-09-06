@@ -63,6 +63,8 @@ export default function LCATVApp() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showWelcome, setShowWelcome] = useState(true);
   const [livePlayerActive, setLivePlayerActive] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   
   const navigation = useNavigation();
 
