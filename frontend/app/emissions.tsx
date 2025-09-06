@@ -76,17 +76,33 @@ export default function EmissionsScreen() {
       const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/videos/latest?limit=50`);
       const videos: YouTubeVideo[] = await response.json();
       
-      // Organiser les vidéos par catégories style Netflix
+      // Vérifier s'il y a de nouvelles vidéos depuis la dernière mise à jour
+      const previousVideoCount = categories.reduce((acc, cat) => acc + cat.videos.length, 0);
+      const newVideoCount = videos.length;
+      
+      if (previousVideoCount > 0 && newVideoCount > previousVideoCount) {
+        console.log(`🎉 ${newVideoCount - previousVideoCount} nouvelles vidéos détectées !`);
+        // Ici on pourrait ajouter une notification ou un badge "NEW"
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      
+      // Organiser les vidéos par rubriques réelles de LCA TV
       const categorizedVideos = categorizeVideos(videos);
       setCategories(categorizedVideos);
       
-      // Définir la vidéo en vedette (la plus récente)
-      if (videos.length > 0) {
-        setFeaturedVideo(videos[0]);
-      }
+      // Définir la vidéo en vedette (la plus récente de "Check Point" ou la première)
+      const checkPointVideos = videos.filter(v => 
+        v.title.toLowerCase().includes('check point') || v.title.toLowerCase().includes('checkpoint')
+      );
+      const featuredVideo = checkPointVideos.length > 0 ? checkPointVideos[0] : videos[0];
+      setFeaturedVideo(featuredVideo);
+      
+      setLastUpdate(new Date());
+      console.log(`✅ ${categorizedVideos.length} rubriques chargées avec ${videos.length} vidéos`);
       
     } catch (error) {
       console.error('Error loading YouTube videos:', error);
+      // En cas d'erreur, garder les données précédentes si elles existent
     } finally {
       setLoading(false);
     }
