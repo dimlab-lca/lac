@@ -187,7 +187,7 @@ export default function Index() {
             <Text style={styles.welcomeText}>Welcome back!</Text>
             <Text style={styles.headerTitle}>Publicity Campaigns</Text>
           </View>
-          <TouchableOpacity style={styles.profileButton}>
+          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/auth/login')}>
             <Ionicons name="person-circle-outline" size={32} color="#667eea" />
           </TouchableOpacity>
         </View>
