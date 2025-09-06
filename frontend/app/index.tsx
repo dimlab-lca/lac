@@ -59,6 +59,7 @@ export default function LCATVApp() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const categories = [
     { key: 'all', label: 'Tout', icon: 'grid-outline' },
