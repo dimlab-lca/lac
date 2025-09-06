@@ -196,7 +196,7 @@ function CustomDrawerContent(props: any) {
             <TouchableOpacity
               key={index}
               style={styles.menuItem}
-              onPress={() => handleMenuPress(item.route)}
+              onPress={() => handleMenuPress(item.route, item.isDownload)}
               activeOpacity={0.7}
             >
               <View style={[styles.menuIcon, { backgroundColor: `${item.color}20` }]}>
@@ -204,8 +204,8 @@ function CustomDrawerContent(props: any) {
               </View>
               <Text style={styles.menuLabel}>{item.label}</Text>
               {item.badge && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{item.badge}</Text>
+                <View style={[styles.badge, item.badge === 'NEW' && styles.newBadge]}>
+                  <Text style={[styles.badgeText, item.badge === 'NEW' && styles.newBadgeText]}>{item.badge}</Text>
                 </View>
               )}
               <Ionicons name="chevron-forward" size={16} color="#9ca3af" style={styles.chevron} />
