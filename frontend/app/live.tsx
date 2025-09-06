@@ -51,8 +51,6 @@ export default function LiveScreen() {
     setIsFullscreen(!isFullscreen);
   };
 
-  const [isPlaying, setIsPlaying] = useState(false);
-
   const handlePlayPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsPlaying(true);
