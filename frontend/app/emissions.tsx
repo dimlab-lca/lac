@@ -307,6 +307,23 @@ export default function EmissionsScreen() {
     setShowVideoPlayer(true);
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadVideosFromYouTube();
+    setRefreshing(false);
+  };
+
+  const formatLastUpdate = (date: Date): string => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'À l\'instant';
+    if (diffInMinutes < 60) return `Il y a ${diffInMinutes} min`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `Il y a ${diffInHours}h`;
+    return `Il y a ${Math.floor(diffInHours / 24)} jour(s)`;
+  };
+
   const renderFeaturedVideo = () => {
     if (!featuredVideo) return null;
 
