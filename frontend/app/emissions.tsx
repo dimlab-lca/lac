@@ -8,306 +8,395 @@ import {
   SafeAreaView,
   StatusBar,
   Dimensions,
+  Image,
+  FlatList,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 // Burkina Faso Colors
 const BURKINA_COLORS = {
   primary: '#009639',
-  secondary: '#FCD116',
+  secondary: '#FCD116', 
   accent: '#CE1126',
   dark: '#1a1a1a',
   light: '#f8f9fa',
   white: '#ffffff'
 };
 
-interface Emission {
+interface YouTubeVideo {
   id: string;
   title: string;
   description: string;
-  category: string;
-  schedule: string;
-  duration: string;
-  host: string;
-  rating: number;
-  isLive: boolean;
   thumbnail: string;
+  duration: string;
+  view_count: string;
+  like_count: string;
+  category: string;
+  published_at: string;
+}
+
+interface VideoCategory {
+  key: string;
+  label: string;
+  icon: string;
+  color: string;
+  videos: YouTubeVideo[];
 }
 
 export default function EmissionsScreen() {
-  const [emissions, setEmissions] = useState<Emission[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [categories, setCategories] = useState<VideoCategory[]>([]);
+  const [featuredVideo, setFeaturedVideo] = useState<YouTubeVideo | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   const navigation = useNavigation();
 
-  const categories = [
-    { key: 'all', label: 'Toutes', icon: 'tv-outline', color: BURKINA_COLORS.primary },
-    { key: 'actualites', label: 'Actualités', icon: 'newspaper-outline', color: BURKINA_COLORS.accent },
-    { key: 'debats', label: 'Débats', icon: 'chatbubbles-outline', color: BURKINA_COLORS.primary },
-    { key: 'culture', label: 'Culture', icon: 'musical-notes-outline', color: BURKINA_COLORS.secondary },
-    { key: 'sport', label: 'Sport', icon: 'football-outline', color: BURKINA_COLORS.accent },
-    { key: 'jeunesse', label: 'Jeunesse', icon: 'people-outline', color: BURKINA_COLORS.primary },
-  ];
-
   useEffect(() => {
-    loadEmissions();
+    loadVideosFromYouTube();
   }, []);
 
-  const loadEmissions = () => {
-    const mockEmissions: Emission[] = [
+  const loadVideosFromYouTube = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/videos/latest?limit=50`);
+      const videos: YouTubeVideo[] = await response.json();
+      
+      // Organiser les vidéos par catégories style Netflix
+      const categorizedVideos = categorizeVideos(videos);
+      setCategories(categorizedVideos);
+      
+      // Définir la vidéo en vedette (la plus récente)
+      if (videos.length > 0) {
+        setFeaturedVideo(videos[0]);
+      }
+      
+    } catch (error) {
+      console.error('Error loading YouTube videos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const categorizeVideos = (videos: YouTubeVideo[]): VideoCategory[] => {
+    // Créer des catégories basées sur les mots-clés dans les titres
+    const categories: VideoCategory[] = [
       {
-        id: '1',
-        title: 'Journal Télévisé',
-        description: 'L\'essentiel de l\'actualité nationale et internationale présenté par nos journalistes chevronnés.',
-        category: 'actualites',
-        schedule: 'Tous les jours à 20h00',
-        duration: '45 min',
-        host: 'Fatimata Ouédraogo',
-        rating: 4.8,
-        isLive: true,
-        thumbnail: 'news'
+        key: 'recent',
+        label: 'Nouvelles Émissions',
+        icon: 'sparkles',
+        color: BURKINA_COLORS.accent,
+        videos: videos.slice(0, 10)
       },
       {
-        id: '2',
-        title: 'Franc-Parler',
-        description: 'Débat politique et social avec les personnalités qui font l\'actualité burkinabè.',
-        category: 'debats',
-        schedule: 'Mercredi à 21h00',
-        duration: '90 min',
-        host: 'Issouf Sanogo',
-        rating: 4.5,
-        isLive: false,
-        thumbnail: 'debate'
+        key: 'actualites',
+        label: 'Actualités & Journal',
+        icon: 'newspaper',
+        color: BURKINA_COLORS.primary,
+        videos: videos.filter(v => 
+          v.title.toLowerCase().includes('actualité') ||
+          v.title.toLowerCase().includes('journal') ||
+          v.title.toLowerCase().includes('news') ||
+          v.title.toLowerCase().includes('info')
+        )
       },
       {
-        id: '3',
-        title: 'Culture & Tradition',
-        description: 'Découverte des richesses culturelles et traditionnelles du Burkina Faso.',
-        category: 'culture',
-        schedule: 'Samedi à 19h30',
-        duration: '60 min',
-        host: 'Aminata Traoré',
-        rating: 4.6,
-        isLive: false,
-        thumbnail: 'culture'
+        key: 'debats',
+        label: 'Débats & Politique',
+        icon: 'chatbubbles',
+        color: BURKINA_COLORS.secondary,
+        videos: videos.filter(v => 
+          v.title.toLowerCase().includes('débat') ||
+          v.title.toLowerCase().includes('politique') ||
+          v.title.toLowerCase().includes('discussion')
+        )
       },
       {
-        id: '4',
-        title: 'Sport Nacional',
-        description: 'Toute l\'actualité sportive burkinabè et internationale, focus sur les Étalons.',
-        category: 'sport',
-        schedule: 'Dimanche à 18h00',
-        duration: '30 min',
-        host: 'Brahima Ouédraogo',
-        rating: 4.3,
-        isLive: false,
-        thumbnail: 'sport'
+        key: 'culture',
+        label: 'Culture & Société',
+        icon: 'musical-notes',
+        color: BURKINA_COLORS.accent,
+        videos: videos.filter(v => 
+          v.title.toLowerCase().includes('culture') ||
+          v.title.toLowerCase().includes('tradition') ||
+          v.title.toLowerCase().includes('société')
+        )
       },
       {
-        id: '5',
-        title: 'Jeunes Entrepreneurs',
-        description: 'Portraits de jeunes entrepreneurs burkinabè qui réussissent et inspirent.',
-        category: 'jeunesse',
-        schedule: 'Vendredi à 20h30',
-        duration: '45 min',
-        host: 'Marie Kaboré',
-        rating: 4.4,
-        isLive: false,
-        thumbnail: 'youth'
+        key: 'sport',
+        label: 'Sport',
+        icon: 'football',
+        color: BURKINA_COLORS.primary,
+        videos: videos.filter(v => 
+          v.title.toLowerCase().includes('sport') ||
+          v.title.toLowerCase().includes('football') ||
+          v.title.toLowerCase().includes('étalons')
+        )
+      },
+      {
+        key: 'populaire',
+        label: 'Le Plus Regardé',
+        icon: 'trending-up',
+        color: BURKINA_COLORS.secondary,
+        videos: videos.sort((a, b) => parseInt(b.view_count) - parseInt(a.view_count)).slice(0, 10)
+      },
+      {
+        key: 'education',
+        label: 'Éducation & Jeunesse',
+        icon: 'school',
+        color: BURKINA_COLORS.primary,
+        videos: videos.filter(v => 
+          v.title.toLowerCase().includes('éducation') ||
+          v.title.toLowerCase().includes('jeune') ||
+          v.title.toLowerCase().includes('étudiant') ||
+          v.title.toLowerCase().includes('formation')
+        )
       }
     ];
+
+    // Filtrer les catégories qui ont au moins 3 vidéos
+    return categories.filter(cat => cat.videos.length >= 3);
+  };
+
+  const formatDuration = (duration: string): string => {
+    // Convertir PT1H2M10S en format lisible
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return duration;
     
-    setEmissions(mockEmissions);
+    const hours = match[1] ? parseInt(match[1]) : 0;
+    const minutes = match[2] ? parseInt(match[2]) : 0;
+    const seconds = match[3] ? parseInt(match[3]) : 0;
+    
+    if (hours > 0) {
+      return `${hours}h${minutes.toString().padStart(2, '0')}min`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const handleCategoryPress = (category: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedCategory(category);
+  const formatViewCount = (viewCount: string): string => {
+    const count = parseInt(viewCount);
+    if (count >= 1000000) {
+      return `${(count / 1000000).toFixed(1)}M`;
+    } else if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toString();
   };
 
-  const filteredEmissions = selectedCategory === 'all' 
-    ? emissions 
-    : emissions.filter(emission => emission.category === selectedCategory);
+  const handleVideoPress = (video: YouTubeVideo) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedVideo(video);
+    setShowVideoPlayer(true);
+  };
 
-  const renderCategoryFilter = () => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.categoryContainer}
-      contentContainerStyle={styles.categoryContent}
-    >
-      {categories.map((category) => (
-        <TouchableOpacity
-          key={category.key}
-          style={[
-            styles.categoryButton,
-            selectedCategory === category.key && styles.categoryButtonActive,
-            { borderColor: category.color }
-          ]}
-          onPress={() => handleCategoryPress(category.key)}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={category.icon as any}
-            size={18}
-            color={selectedCategory === category.key ? 'white' : category.color}
+  const renderFeaturedVideo = () => {
+    if (!featuredVideo) return null;
+
+    return (
+      <View style={styles.featuredContainer}>
+        <View style={styles.featuredImageContainer}>
+          <Image 
+            source={{ uri: featuredVideo.thumbnail }}
+            style={styles.featuredImage}
+            resizeMode="cover"
           />
-          <Text style={[
-            styles.categoryText,
-            selectedCategory === category.key && styles.categoryTextActive,
-            { color: selectedCategory === category.key ? 'white' : category.color }
-          ]}>
-            {category.label}
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.8)']}
+            style={styles.featuredOverlay}
+          />
+        </View>
+        
+        <View style={styles.featuredContent}>
+          <View style={styles.featuredBadge}>
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Text style={styles.featuredBadgeText}>ÉMISSION VEDETTE</Text>
+          </View>
+          
+          <Text style={styles.featuredTitle} numberOfLines={2}>
+            {featuredVideo.title}
           </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
-
-  const renderEmissionCard = (emission: Emission) => (
-    <TouchableOpacity
-      key={emission.id}
-      style={styles.emissionCard}
-      activeOpacity={0.9}
-      onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-    >
-      <View style={styles.emissionThumbnail}>
-        <LinearGradient
-          colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
-          style={styles.thumbnailGradient}
-        >
-          <Ionicons name="play-circle" size={40} color="white" />
-        </LinearGradient>
-        
-        {emission.isLive && (
-          <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>LIVE</Text>
-          </View>
-        )}
-        
-        <View style={styles.ratingBadge}>
-          <Ionicons name="star" size={12} color="#FFD700" />
-          <Text style={styles.ratingText}>{emission.rating}</Text>
-        </View>
-      </View>
-
-      <View style={styles.emissionInfo}>
-        <Text style={styles.emissionTitle}>{emission.title}</Text>
-        <Text style={styles.emissionDescription} numberOfLines={2}>
-          {emission.description}
-        </Text>
-        
-        <View style={styles.emissionMeta}>
-          <View style={styles.metaRow}>
-            <Ionicons name="time-outline" size={14} color="#6b7280" />
-            <Text style={styles.metaText}>{emission.schedule}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Ionicons name="hourglass-outline" size={14} color="#6b7280" />
-            <Text style={styles.metaText}>{emission.duration}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Ionicons name="person-outline" size={14} color="#6b7280" />
-            <Text style={styles.metaText}>{emission.host}</Text>
-          </View>
-        </View>
-
-        <View style={styles.emissionFooter}>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>
-              {categories.find(c => c.key === emission.category)?.label}
+          
+          <Text style={styles.featuredDescription} numberOfLines={2}>
+            {featuredVideo.description}
+          </Text>
+          
+          <View style={styles.featuredMeta}>
+            <Text style={styles.featuredMetaText}>
+              {formatViewCount(featuredVideo.view_count)} vues • {formatDuration(featuredVideo.duration)}
             </Text>
           </View>
-          <TouchableOpacity style={styles.watchButton}>
-            <Ionicons name="play" size={16} color="white" />
-            <Text style={styles.watchButtonText}>Regarder</Text>
-          </TouchableOpacity>
+          
+          <View style={styles.featuredButtons}>
+            <TouchableOpacity 
+              style={styles.playButton}
+              onPress={() => handleVideoPress(featuredVideo)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="play" size={20} color="black" />
+              <Text style={styles.playButtonText}>Regarder</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.infoButton} activeOpacity={0.8}>
+              <Ionicons name="information-circle-outline" size={20} color="white" />
+              <Text style={styles.infoButtonText}>Plus d'infos</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+      </View>
+    );
+  };
+
+  const renderVideoCard = ({ item }: { item: YouTubeVideo }) => (
+    <TouchableOpacity 
+      style={styles.videoCard}
+      onPress={() => handleVideoPress(item)}
+      activeOpacity={0.8}
+    >
+      <Image 
+        source={{ uri: item.thumbnail }}
+        style={styles.videoThumbnail}
+        resizeMode="cover"
+      />
+      <View style={styles.videoDurationBadge}>
+        <Text style={styles.videoDurationText}>{formatDuration(item.duration)}</Text>
+      </View>
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
+        style={styles.videoOverlay}
+      />
+      <View style={styles.videoInfo}>
+        <Text style={styles.videoTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text style={styles.videoMeta}>
+          {formatViewCount(item.view_count)} vues
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderScheduleSection = () => (
-    <View style={styles.scheduleSection}>
-      <Text style={styles.sectionTitle}>Programme de la Semaine</Text>
+  const renderCategorySection = (category: VideoCategory) => (
+    <View key={category.key} style={styles.categorySection}>
+      <View style={styles.categoryHeader}>
+        <View style={styles.categoryTitleContainer}>
+          <Ionicons 
+            name={category.icon as any} 
+            size={20} 
+            color={category.color} 
+          />
+          <Text style={styles.categoryTitle}>{category.label}</Text>
+        </View>
+        <TouchableOpacity style={styles.seeAllButton}>
+          <Text style={styles.seeAllText}>Tout voir</Text>
+          <Ionicons name="chevron-forward" size={16} color="#6b7280" />
+        </TouchableOpacity>
+      </View>
       
-      <ScrollView
+      <FlatList
+        data={category.videos}
+        renderItem={renderVideoCard}
+        keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.scheduleScroll}
-        contentContainerStyle={styles.scheduleContent}
-      >
-        {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day, index) => (
-          <TouchableOpacity key={index} style={styles.dayCard} activeOpacity={0.8}>
-            <BlurView intensity={20} style={styles.dayBlur}>
-              <Text style={styles.dayText}>{day}</Text>
-              <Text style={styles.dayDate}>{15 + index}</Text>
-              <View style={styles.dayPrograms}>
-                <View style={styles.programDot} />
-                <Text style={styles.programCount}>3 émissions</Text>
-              </View>
-            </BlurView>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+        contentContainerStyle={styles.videoList}
+        ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+      />
     </View>
   );
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.dark} />
+        <View style={styles.loadingContainer}>
+          <LinearGradient
+            colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+            style={styles.loadingGradient}
+          >
+            <Ionicons name="tv" size={60} color="white" />
+            <Text style={styles.loadingText}>Chargement des émissions...</Text>
+          </LinearGradient>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.secondary} />
+      <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.dark} />
       
       {/* Header */}
-      <LinearGradient
-        colors={[BURKINA_COLORS.secondary, '#f59e0b']}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>Émissions</Text>
-            <Text style={styles.headerSubtitle}>Programmes LCA TV</Text>
-          </View>
-          <TouchableOpacity style={styles.scheduleButton}>
-            <Ionicons name="calendar-outline" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Émissions</Text>
+        <TouchableOpacity style={styles.searchButton}>
+          <Ionicons name="search" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Category Filter */}
-        {renderCategoryFilter()}
+        {/* Featured Video */}
+        {renderFeaturedVideo()}
 
-        {/* Emissions Section */}
-        <View style={styles.emissionsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {selectedCategory === 'all' ? 'Toutes les Émissions' : 
-               categories.find(c => c.key === selectedCategory)?.label}
-            </Text>
-            <Text style={styles.sectionSubtitle}>
-              {filteredEmissions.length} émission{filteredEmissions.length > 1 ? 's' : ''}
-            </Text>
-          </View>
-
-          {filteredEmissions.map(renderEmissionCard)}
-        </View>
-
-        {/* Schedule Section */}
-        {renderScheduleSection()}
+        {/* Categories */}
+        {categories.map(renderCategorySection)}
+        
+        <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Video Player Modal */}
+      {showVideoPlayer && selectedVideo && (
+        <View style={styles.videoPlayerModal}>
+          <View style={styles.videoPlayerContainer}>
+            <View style={styles.videoPlayerHeader}>
+              <Text style={styles.videoPlayerTitle} numberOfLines={2}>
+                {selectedVideo.title}
+              </Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => {
+                  setShowVideoPlayer(false);
+                  setSelectedVideo(null);
+                }}
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.videoPlayerContent}>
+              <iframe
+                src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen={true}
+              />
+            </View>
+            
+            <View style={styles.videoPlayerInfo}>
+              <Text style={styles.videoPlayerMeta}>
+                {formatViewCount(selectedVideo.view_count)} vues • {selectedVideo.like_count} ❤️
+              </Text>
+              <Text style={styles.videoPlayerDescription} numberOfLines={3}>
+                {selectedVideo.description}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
