@@ -625,6 +625,55 @@ export default function LCATVApp() {
           </LinearGradient>
         </View>
       </ScrollView>
+
+      {/* Video Player Modal */}
+      {showVideoPlayer && selectedVideo && (
+        <View style={styles.videoPlayerModal}>
+          <View style={styles.videoPlayerContainer}>
+            <View style={styles.videoPlayerHeader}>
+              <Text style={styles.videoPlayerTitle} numberOfLines={2}>
+                {selectedVideo.title}
+              </Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => {
+                  setShowVideoPlayer(false);
+                  setSelectedVideo(null);
+                }}
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.videoPlayerContent}>
+              <WebView
+                source={{
+                  uri: `https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`
+                }}
+                style={styles.videoPlayerWebView}
+                allowsFullscreenVideo={true}
+                mediaPlaybackRequiresUserAction={false}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                startInLoadingState={true}
+                renderLoading={() => (
+                  <View style={styles.videoPlayerLoading}>
+                    <Ionicons name="play-circle" size={60} color="white" />
+                    <Text style={styles.videoPlayerLoadingText}>Chargement...</Text>
+                  </View>
+                )}
+              />
+            </View>
+            <View style={styles.videoPlayerInfo}>
+              <Text style={styles.videoPlayerMeta}>
+                {formatViewCount(selectedVideo.view_count)} vues • {selectedVideo.like_count} ❤️
+              </Text>
+              <Text style={styles.videoPlayerDescription} numberOfLines={3}>
+                {selectedVideo.description}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
