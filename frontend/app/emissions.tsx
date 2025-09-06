@@ -469,12 +469,27 @@ export default function EmissionsScreen() {
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Émissions</Text>
-        <TouchableOpacity style={styles.searchButton}>
-          <Ionicons name="search" size={24} color="white" />
+        <TouchableOpacity 
+          style={styles.refreshButton}
+          onPress={onRefresh}
+        >
+          <Ionicons name="refresh" size={20} color="white" />
+          <Text style={styles.refreshText}>{formatLastUpdate(lastUpdate)}</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={BURKINA_COLORS.primary}
+            colors={[BURKINA_COLORS.primary]}
+          />
+        }
+      >
         {/* Featured Video */}
         {renderFeaturedVideo()}
 
