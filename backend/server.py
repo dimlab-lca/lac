@@ -743,7 +743,7 @@ async def add_comment(video_id: str, comment_data: Comment):
         }
         
         # Insérer en base
-        result = await comments_collection.insert_one(comment)
+        result = comments_collection.insert_one(comment)
         comment["_id"] = str(result.inserted_id)
         
         logger.info(f"✅ Nouveau commentaire ajouté pour la vidéo {video_id}")
