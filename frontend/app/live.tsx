@@ -337,7 +337,28 @@ const styles = StyleSheet.create({
   videoPlayer: {
     height: 200,
   },
+  webView: {
+    flex: 1,
+  },
+  loadingView: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: BURKINA_COLORS.dark,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 14,
+    marginTop: 8,
+  },
   playerPlaceholder: {
+    flex: 1,
+  },
+  playerGradient: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
