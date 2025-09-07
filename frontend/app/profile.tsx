@@ -665,109 +665,23 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.primary} />
       
-      {/* Header */}
-      <LinearGradient
-        colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
-        style={styles.header}
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={BURKINA_COLORS.primary}
+            colors={[BURKINA_COLORS.primary]}
+          />
+        }
       >
-        <View style={styles.headerContent}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>Mon Profil</Text>
-            <Text style={styles.headerSubtitle}>Compte LCA TV</Text>
-          </View>
-          <TouchableOpacity style={styles.editButton} onPress={handleProfileEdit}>
-            <Ionicons name="create-outline" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <BlurView intensity={20} style={styles.profileBlur}>
-            <View style={styles.profileContent}>
-              <View style={styles.avatar}>
-                <LinearGradient
-                  colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
-                  style={styles.avatarGradient}
-                >
-                  <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
-                </LinearGradient>
-              </View>
-              <View style={styles.profileInfo}>
-                <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.userEmail}>{user.email}</Text>
-                <Text style={styles.userLocation}>{user.location}</Text>
-                <Text style={styles.memberSince}>Membre depuis {user.memberSince}</Text>
-              </View>
-            </View>
-          </BlurView>
-        </View>
-
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>Statistiques</Text>
-          <View style={styles.statsGrid}>
-            {stats.map(renderStatCard)}
-          </View>
-        </View>
-
-        {/* Options Section */}
-        <View style={styles.optionsSection}>
-          <Text style={styles.sectionTitle}>Paramètres du Compte</Text>
-          {profileOptions.map(renderOptionCard)}
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>Actions Rapides</Text>
-          
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.8}>
-            <LinearGradient
-              colors={[BURKINA_COLORS.secondary, '#f59e0b']}
-              style={styles.actionGradient}
-            >
-              <Ionicons name="star" size={20} color="white" />
-              <Text style={styles.actionText}>Évaluer LCA TV</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.8}>
-            <LinearGradient
-              colors={[BURKINA_COLORS.primary, '#16a34a']}
-              style={styles.actionGradient}
-            >
-              <Ionicons name="share" size={20} color="white" />
-              <Text style={styles.actionText}>Partager l'app</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* Logout Section */}
-        <View style={styles.logoutSection}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
-            <LinearGradient
-              colors={[BURKINA_COLORS.accent, '#dc2626']}
-              style={styles.logoutGradient}
-            >
-              <Ionicons name="log-out-outline" size={20} color="white" />
-              <Text style={styles.logoutText}>Se Déconnecter</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* App Info */}
-        <View style={styles.appInfo}>
-          <Text style={styles.appInfoTitle}>LCA TV Burkina Faso</Text>
-          <Text style={styles.appInfoVersion}>Version 1.0.0</Text>
-          <Text style={styles.appInfoCopyright}>© 2024 LCA TV. Tous droits réservés.</Text>
-        </View>
+        {renderProfileHeader()}
+        {renderTabBar()}
+        {renderTabContent()}
+        
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
