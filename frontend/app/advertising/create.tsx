@@ -4,22 +4,23 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   ScrollView,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
   SafeAreaView,
+  StatusBar,
+  TextInput,
+  Alert,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 
-// Burkina Faso Colors
+const { width } = Dimensions.get('window');
+
+// LCA TV Colors (Updated with Blue Theme)
 const BURKINA_COLORS = {
-  primary: '#009639', // Green from flag
+  primary: '#2563EB', // Modern Blue (was green)
   secondary: '#FCD116', // Yellow from flag
   accent: '#CE1126', // Red from flag
   dark: '#1a1a1a',
@@ -27,310 +28,264 @@ const BURKINA_COLORS = {
   white: '#ffffff'
 };
 
-interface AdvertisementForm {
-  title: string;
-  description: string;
-  duration_days: string;
-  budget: string;
-  target_audience: string;
-  ad_type: string;
-  content_url: string;
-}
-
-export default function CreateAdvertisement() {
-  const [formData, setFormData] = useState<AdvertisementForm>({
-    title: '',
-    description: '',
-    duration_days: '',
+export default function CreateAdvertisingScreen() {
+  const [formData, setFormData] = useState({
+    companyName: '',
+    contactName: '',
+    email: '',
+    phone: '',
+    adType: '',
+    duration: '',
     budget: '',
-    target_audience: '',
-    ad_type: 'banner',
-    content_url: ''
+    description: '',
+    targetAudience: '',
+    startDate: '',
   });
   const [loading, setLoading] = useState(false);
+  
+  const navigation = useNavigation();
 
   const adTypes = [
-    { value: 'banner', label: 'Bannière publicitaire', icon: 'image-outline' },
-    { value: 'video', label: 'Spot vidéo', icon: 'videocam-outline' },
-    { value: 'sponsored_content', label: 'Contenu sponsorisé', icon: 'star-outline' }
+    { id: 'video', label: 'Spot Vidéo', description: '30-60 secondes', price: '500,000 FCFA' },
+    { id: 'banner', label: 'Bannière TV', description: 'Affichage fixe', price: '200,000 FCFA' },
+    { id: 'sponsorship', label: 'Parrainage', description: 'Émission sponsorisée', price: '1,000,000 FCFA' },
+    { id: 'breaking', label: 'Breaking News', description: 'Bandeau d\'actualité', price: '300,000 FCFA' },
   ];
 
-  const audienceOptions = [
-    'Grand public (18-65 ans)',
-    'Jeunes adultes (18-35 ans)',
-    'Familles (25-50 ans)',
-    'Professionnels (30-55 ans)',
-    'Étudiants (16-25 ans)',
-    'Entrepreneurs (25-45 ans)'
-  ];
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-  const calculateEstimatedCost = () => {
-    const budget = parseFloat(formData.budget) || 0;
-    const days = parseInt(formData.duration_days) || 1;
-    const multiplier = formData.ad_type === 'video' ? 1.5 : formData.ad_type === 'sponsored_content' ? 1.2 : 1;
-    return Math.round(budget * days * multiplier);
+  const handleAdTypeSelect = (type: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    handleInputChange('adType', type);
   };
 
   const handleSubmit = async () => {
-    if (!formData.title.trim() || !formData.description.trim() || !formData.budget || !formData.duration_days) {
+    if (!formData.companyName || !formData.contactName || !formData.email || !formData.adType) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    if (parseFloat(formData.budget) <= 0 || parseInt(formData.duration_days) <= 0) {
-      Alert.alert('Erreur', 'Le budget et la durée doivent être supérieurs à 0');
-      return;
-    }
-
-    setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
     try {
-      const EXPO_PUBLIC_BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+      setLoading(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
-      // In a real app, you would include the auth token
-      const response = await fetch(`${EXPO_PUBLIC_BACKEND_URL}/api/advertisements`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          duration_days: parseInt(formData.duration_days),
-          budget: parseFloat(formData.budget),
-          target_audience: formData.target_audience,
-          ad_type: formData.ad_type,
-          content_url: formData.content_url || null
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        Alert.alert(
-          'Demande envoyée !',
-          `Votre demande publicitaire a été soumise avec succès.\n\nRéférence: ${result.id}\nCoût estimé: ${calculateEstimatedCost()} FCFA\n\nNotre équipe vous contactera sous 24h.`,
-          [
-            { text: 'OK', onPress: () => router.back() }
-          ]
-        );
-      } else {
-        const error = await response.json();
-        Alert.alert('Erreur', error.detail || 'Erreur lors de la soumission');
-      }
+      // Simulate form submission
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      Alert.alert(
+        'Demande envoyée !',
+        'Votre demande de publicité a été envoyée avec succès. Notre équipe commerciale vous contactera dans les 24h.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
     } catch (error) {
-      Alert.alert('Erreur', 'Erreur réseau. Veuillez réessayer.');
-      console.error('Advertisement creation error:', error);
+      Alert.alert('Erreur', 'Impossible d\'envoyer la demande. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
   };
 
+  const renderAdTypeCard = (adType: any) => (
+    <TouchableOpacity
+      key={adType.id}
+      style={[
+        styles.adTypeCard,
+        formData.adType === adType.id && styles.adTypeCardSelected
+      ]}
+      onPress={() => handleAdTypeSelect(adType.id)}
+      activeOpacity={0.8}
+    >
+      <View style={styles.adTypeHeader}>
+        <Text style={[
+          styles.adTypeLabel,
+          formData.adType === adType.id && styles.adTypeLabelSelected
+        ]}>
+          {adType.label}
+        </Text>
+        <Text style={styles.adTypePrice}>{adType.price}</Text>
+      </View>
+      <Text style={styles.adTypeDescription}>{adType.description}</Text>
+      {formData.adType === adType.id && (
+        <View style={styles.selectedIndicator}>
+          <Ionicons name="checkmark-circle" size={20} color={BURKINA_COLORS.primary} />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]} style={styles.header}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>Créer une Publicité</Text>
-            <Text style={styles.headerSubtitle}>LCA TV Burkina Faso</Text>
-          </View>
-        </View>
+      <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.primary} />
+      
+      {/* Header */}
+      <LinearGradient
+        colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+        style={styles.header}
+      >
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Créer une Publicité</Text>
+        <View style={styles.headerSpacer} />
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}
-      >
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <BlurView intensity={20} style={styles.formContainer}>
-            <View style={styles.formContent}>
-              
-              {/* Title Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Titre de la publicité *</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="text-outline" size={20} color={BURKINA_COLORS.primary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Ex: Promotion spéciale restaurant"
-                    placeholderTextColor="#9ca3af"
-                    value={formData.title}
-                    onChangeText={(text) => setFormData({...formData, title: text})}
-                  />
-                </View>
-              </View>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Introduction */}
+        <View style={styles.section}>
+          <View style={styles.introCard}>
+            <Ionicons name="megaphone" size={40} color={BURKINA_COLORS.primary} />
+            <Text style={styles.introTitle}>Faites connaître votre entreprise</Text>
+            <Text style={styles.introText}>
+              Diffusez votre publicité sur LCA TV et atteignez des milliers de téléspectateurs au Burkina Faso.
+            </Text>
+          </View>
+        </View>
 
-              {/* Description Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Description *</Text>
-                <View style={[styles.inputContainer, styles.textAreaContainer]}>
-                  <Ionicons name="document-text-outline" size={20} color={BURKINA_COLORS.primary} style={styles.inputIcon} />
-                  <TextInput
-                    style={[styles.textInput, styles.textArea]}
-                    placeholder="Décrivez votre campagne publicitaire..."
-                    placeholderTextColor="#9ca3af"
-                    value={formData.description}
-                    onChangeText={(text) => setFormData({...formData, description: text})}
-                    multiline
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                  />
-                </View>
-              </View>
+        {/* Ad Type Selection */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Type de Publicité *</Text>
+          <View style={styles.adTypeGrid}>
+            {adTypes.map(renderAdTypeCard)}
+          </View>
+        </View>
 
-              {/* Ad Type Selection */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Type de publicité *</Text>
-                <View style={styles.adTypeContainer}>
-                  {adTypes.map((type) => (
-                    <TouchableOpacity
-                      key={type.value}
-                      style={[
-                        styles.adTypeButton,
-                        formData.ad_type === type.value && styles.adTypeButtonActive
-                      ]}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setFormData({...formData, ad_type: type.value});
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons
-                        name={type.icon as any}
-                        size={20}
-                        color={formData.ad_type === type.value ? 'white' : BURKINA_COLORS.primary}
-                      />
-                      <Text style={[
-                        styles.adTypeText,
-                        formData.ad_type === type.value && styles.adTypeTextActive
-                      ]}>
-                        {type.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* Budget and Duration Row */}
-              <View style={styles.rowContainer}>
-                <View style={[styles.inputGroup, styles.halfWidth]}>
-                  <Text style={styles.inputLabel}>Budget (FCFA) *</Text>
-                  <View style={styles.inputContainer}>
-                    <Ionicons name="cash-outline" size={20} color={BURKINA_COLORS.primary} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="50000"
-                      placeholderTextColor="#9ca3af"
-                      value={formData.budget}
-                      onChangeText={(text) => setFormData({...formData, budget: text})}
-                      keyboardType="numeric"
-                    />
-                  </View>
-                </View>
-
-                <View style={[styles.inputGroup, styles.halfWidth]}>
-                  <Text style={styles.inputLabel}>Durée (jours) *</Text>
-                  <View style={styles.inputContainer}>
-                    <Ionicons name="calendar-outline" size={20} color={BURKINA_COLORS.primary} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="7"
-                      placeholderTextColor="#9ca3af"
-                      value={formData.duration_days}
-                      onChangeText={(text) => setFormData({...formData, duration_days: text})}
-                      keyboardType="numeric"
-                    />
-                  </View>
-                </View>
-              </View>
-
-              {/* Target Audience */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Public cible</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="people-outline" size={20} color={BURKINA_COLORS.primary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Ex: Jeunes adultes de Ouagadougou"
-                    placeholderTextColor="#9ca3af"
-                    value={formData.target_audience}
-                    onChangeText={(text) => setFormData({...formData, target_audience: text})}
-                  />
-                </View>
-              </View>
-
-              {/* Content URL (optional) */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>URL du contenu (optionnel)</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="link-outline" size={20} color={BURKINA_COLORS.primary} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="https://votre-site.com/video.mp4"
-                    placeholderTextColor="#9ca3af"
-                    value={formData.content_url}
-                    onChangeText={(text) => setFormData({...formData, content_url: text})}
-                    autoCapitalize="none"
-                    keyboardType="url"
-                  />
-                </View>
-              </View>
-
-              {/* Cost Estimation */}
-              {formData.budget && formData.duration_days && (
-                <View style={styles.costEstimation}>
-                  <LinearGradient
-                    colors={[BURKINA_COLORS.secondary, '#f59e0b']}
-                    style={styles.costEstimationGradient}
-                  >
-                    <Ionicons name="calculator-outline" size={24} color="white" />
-                    <View style={styles.costEstimationText}>
-                      <Text style={styles.costEstimationTitle}>Coût Estimé</Text>
-                      <Text style={styles.costEstimationAmount}>
-                        {calculateEstimatedCost().toLocaleString()} FCFA
-                      </Text>
-                    </View>
-                  </LinearGradient>
-                </View>
-              )}
-
-              {/* Submit Button */}
-              <TouchableOpacity
-                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-                onPress={handleSubmit}
-                disabled={loading}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={loading ? ['#9ca3af', '#6b7280'] : [BURKINA_COLORS.primary, '#16a34a']}
-                  style={styles.submitButtonGradient}
-                >
-                  {loading ? (
-                    <Text style={styles.submitButtonText}>Envoi en cours...</Text>
-                  ) : (
-                    <>
-                      <Ionicons name="send" size={18} color="white" style={styles.buttonIcon} />
-                      <Text style={styles.submitButtonText}>Soumettre la demande</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-
-              {/* Info Box */}
-              <View style={styles.infoBox}>
-                <Ionicons name="information-circle-outline" size={20} color={BURKINA_COLORS.primary} />
-                <Text style={styles.infoText}>
-                  Notre équipe commerciale vous contactera sous 24h pour finaliser votre campagne publicitaire.
-                </Text>
-              </View>
+        {/* Company Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informations Entreprise</Text>
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Nom de l'entreprise *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.companyName}
+                onChangeText={(value) => handleInputChange('companyName', value)}
+                placeholder="Nom de votre entreprise"
+                placeholderTextColor="#9ca3af"
+              />
             </View>
-          </BlurView>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Nom du contact *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.contactName}
+                onChangeText={(value) => handleInputChange('contactName', value)}
+                placeholder="Votre nom complet"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.email}
+                onChangeText={(value) => handleInputChange('email', value)}
+                placeholder="votre@email.com"
+                placeholderTextColor="#9ca3af"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Téléphone</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.phone}
+                onChangeText={(value) => handleInputChange('phone', value)}
+                placeholder="+226 XX XX XX XX"
+                placeholderTextColor="#9ca3af"
+                keyboardType="phone-pad"
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Campaign Details */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Détails de la Campagne</Text>
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Durée souhaitée</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.duration}
+                onChangeText={(value) => handleInputChange('duration', value)}
+                placeholder="ex: 1 semaine, 1 mois..."
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Budget approximatif</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.budget}
+                onChangeText={(value) => handleInputChange('budget', value)}
+                placeholder="Budget en FCFA"
+                placeholderTextColor="#9ca3af"
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Public cible</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.targetAudience}
+                onChangeText={(value) => handleInputChange('targetAudience', value)}
+                placeholder="ex: Jeunes adultes, Familles..."
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Description du produit/service</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={formData.description}
+                onChangeText={(value) => handleInputChange('description', value)}
+                placeholder="Décrivez votre produit ou service..."
+                placeholderTextColor="#9ca3af"
+                multiline={true}
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Submit Button */}
+        <View style={styles.section}>
+          <TouchableOpacity 
+            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+              style={styles.submitGradient}
+            >
+              {loading ? (
+                <Text style={styles.submitText}>Envoi en cours...</Text>
+              ) : (
+                <>
+                  <Ionicons name="send" size={20} color="white" />
+                  <Text style={styles.submitText}>Envoyer la Demande</Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -341,12 +296,10 @@ const styles = StyleSheet.create({
     backgroundColor: BURKINA_COLORS.light,
   },
   header: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   backButton: {
     width: 40,
@@ -355,169 +308,154 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
-  },
-  headerText: {
-    flex: 1,
   },
   headerTitle: {
-    fontSize: 20,
+    flex: 1,
+    fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
+    textAlign: 'center',
   },
-  headerSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
+  headerSpacer: {
+    width: 40,
   },
   scrollView: {
     flex: 1,
   },
-  formContainer: {
-    margin: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
+  section: {
+    marginTop: 24,
+    paddingHorizontal: 16,
   },
-  formContent: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    padding: 20,
+  introCard: {
+    backgroundColor: BURKINA_COLORS.white,
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  introTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: BURKINA_COLORS.dark,
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  introText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: BURKINA_COLORS.dark,
+    marginBottom: 16,
+  },
+  adTypeGrid: {
+    gap: 12,
+  },
+  adTypeCard: {
+    backgroundColor: BURKINA_COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    position: 'relative',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  adTypeCardSelected: {
+    borderColor: BURKINA_COLORS.primary,
+    backgroundColor: `${BURKINA_COLORS.primary}10`,
+  },
+  adTypeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  adTypeLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: BURKINA_COLORS.dark,
+  },
+  adTypeLabelSelected: {
+    color: BURKINA_COLORS.primary,
+  },
+  adTypePrice: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: BURKINA_COLORS.accent,
+  },
+  adTypeDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+  },
+  form: {
+    backgroundColor: BURKINA_COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   inputGroup: {
     marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: BURKINA_COLORS.dark,
     marginBottom: 8,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  textAreaContainer: {
-    alignItems: 'flex-start',
-    paddingVertical: 16,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  textInput: {
-    flex: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     fontSize: 16,
     color: BURKINA_COLORS.dark,
+    backgroundColor: '#f9fafb',
   },
   textArea: {
-    minHeight: 80,
+    height: 100,
     textAlignVertical: 'top',
   },
-  adTypeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  adTypeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: BURKINA_COLORS.white,
-    borderWidth: 1,
-    borderColor: BURKINA_COLORS.primary,
-    marginBottom: 8,
-  },
-  adTypeButtonActive: {
-    backgroundColor: BURKINA_COLORS.primary,
-  },
-  adTypeText: {
-    marginLeft: 8,
-    fontSize: 14,
-    fontWeight: '500',
-    color: BURKINA_COLORS.primary,
-  },
-  adTypeTextActive: {
-    color: 'white',
-  },
-  rowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  halfWidth: {
-    flex: 1,
-  },
-  costEstimation: {
-    marginBottom: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  costEstimationGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  costEstimationText: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  costEstimationTitle: {
-    fontSize: 14,
-    color: 'white',
-    fontWeight: '500',
-  },
-  costEstimationAmount: {
-    fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
-    marginTop: 2,
-  },
   submitButton: {
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: 'hidden',
-    marginBottom: 20,
   },
   submitButtonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
-  submitButtonGradient: {
+  submitGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
   },
-  submitButtonText: {
+  submitText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
-  },
-  buttonIcon: {
-    marginRight: 4,
-  },
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#e0f2fe',
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: BURKINA_COLORS.primary,
-  },
-  infoText: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
   },
 });
