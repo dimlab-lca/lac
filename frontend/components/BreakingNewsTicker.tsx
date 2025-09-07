@@ -253,13 +253,15 @@ const styles = StyleSheet.create({
   tickerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    minWidth: width * 3, // Assurer un défilement fluide
+    minWidth: width * 4, // Plus large pour éviter les gaps
+    paddingRight: width, // Padding pour transition fluide
   },
   newsItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingRight: 24,
-    minWidth: 300,
+    paddingRight: 32,
+    minWidth: 400, // Plus large pour plus de contenu
+    maxWidth: 500,
   },
   newsIcon: {
     marginRight: 8,
