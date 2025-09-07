@@ -304,6 +304,8 @@ export default function ProfileScreen() {
               {tab.label}
             </Text>
           </TouchableOpacity>
+        ))}
+      </View>
     );
   };
 
