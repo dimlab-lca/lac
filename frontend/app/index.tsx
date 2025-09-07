@@ -181,9 +181,16 @@ export default function LCATVApp() {
         <View style={styles.welcomeContent}>
           {/* Logo Area */}
           <View style={styles.logoContainer}>
-            <BlurView intensity={30} style={styles.logoBlur}>
-              <Ionicons name="tv" size={80} color="white" />
-            </BlurView>
+            <View style={styles.lcaLogoContainer}>
+              <Image 
+                source={{ uri: 'https://customer-assets.emergentagent.com/job_lcatv-burkina/artifacts/a7zhvpqx_lcall.jpg' }}
+                style={styles.lcaLogo}
+                resizeMode="contain"
+              />
+              <BlurView intensity={20} style={styles.logoOverlay}>
+                <Ionicons name="tv" size={24} color="white" style={styles.tvIcon} />
+              </BlurView>
+            </View>
             <Text style={styles.welcomeTitle}>LCA TV</Text>
             <Text style={styles.welcomeSubtitle}>Burkina Faso</Text>
             <View style={styles.taglineContainer}>
