@@ -22,9 +22,9 @@ import * as ImagePicker from 'expo-image-picker';
 
 const { width, height } = Dimensions.get('window');
 
-// Burkina Faso Colors
+// LCA TV Colors (Updated with Blue Theme)
 const BURKINA_COLORS = {
-  primary: '#009639',
+  primary: '#2563EB', // Modern Blue (was green)
   secondary: '#FCD116', 
   accent: '#CE1126',
   dark: '#1a1a1a',
