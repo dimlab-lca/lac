@@ -68,7 +68,7 @@ const BreakingNewsTicker: React.FC = () => {
       tickerItems.push({
         id: 'weather-1',
         type: 'weather',
-        content: `🌤️ OUAGADOUGOU: 32°C - Ensoleillé avec quelques nuages - Vent: 15 km/h`,
+        content: `🌤️ MÉTÉO OUAGADOUGOU: 32°C - Ensoleillé avec quelques nuages passagers - Vent: 15 km/h - Humidité: 45%`,
         icon: 'sunny'
       });
 
@@ -76,15 +76,23 @@ const BreakingNewsTicker: React.FC = () => {
       tickerItems.push({
         id: 'market-1',
         type: 'market',
-        content: `📈 MARCHÉ: FCFA/USD: 590.25 (+0.15%) - Or: 1,950$/oz (+1.2%) - Coton: 82.50 FCFA/kg`,
+        content: `📈 MARCHÉS FINANCIERS: FCFA/USD: 590.25 (+0.15%) - Or: 1,950$/once (+1.2%) - Coton: 82.50 FCFA/kg (+0.8%)`,
         icon: 'trending-up'
       });
 
       tickerItems.push({
         id: 'market-2',
         type: 'market',
-        content: `📊 BOURSE: BRVM +2.1% - Total Sénégal: +3.4% - Sonatel: +1.8% - BOA: +0.9%`,
+        content: `📊 BOURSE RÉGIONALE: BRVM +2.1% - Total Sénégal: +3.4% - Sonatel: +1.8% - BOA Burkina: +0.9% - Coris Bank: +1.2%`,
         icon: 'bar-chart'
+      });
+
+      // Ajouter un message d'info générale
+      tickerItems.push({
+        id: 'info-1',
+        type: 'news',
+        content: `📺 LCA TV BURKINA FASO - Votre chaîne de référence pour l'information, la culture et le divertissement au cœur de l'Afrique de l'Ouest`,
+        icon: 'tv'
       });
 
       setNewsItems(tickerItems);
