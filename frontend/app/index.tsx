@@ -249,7 +249,7 @@ export default function LCATVApp() {
           <View style={styles.watermarkContainer}>
             <View style={styles.watermarkCurve}>
               <LinearGradient
-                colors={['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)']}
+                colors={[BURKINA_COLORS.primary, `${BURKINA_COLORS.primary}E6`]}
                 style={styles.watermarkGradient}
               >
                 <View style={styles.watermarkContent}>
