@@ -461,4 +461,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'white',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerLogo: {
+    width: 32,
+    height: 32,
+    marginRight: 8,
+  },
 });
