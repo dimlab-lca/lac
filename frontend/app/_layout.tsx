@@ -264,49 +264,54 @@ function CustomDrawerContent(props: any) {
 
 export default function RootLayout() {
   return (
-    <Drawer
-      drawerContent={CustomDrawerContent}
-      screenOptions={{
-        drawerStyle: {
-          backgroundColor: 'transparent',
-        },
-        overlayColor: 'rgba(0, 0, 0, 0.7)',
-        drawerType: 'slide',
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: BURKINA_COLORS.primary,
-          height: 90,
-        },
-        headerTintColor: 'white',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-          fontSize: 18,
-        },
-        headerTitle: () => (
-          <View style={styles.headerContainer}>
-            <Image 
-              source={{ uri: 'https://customer-assets.emergentagent.com/job_lcatv-burkina/artifacts/a7zhvpqx_lcall.jpg' }}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-            <Text style={styles.headerTitle}>LCA TV</Text>
-          </View>
-        ),
-        headerTitleAlign: 'left',
-      }}
-    >
-      <Drawer.Screen name="index" />
-      <Drawer.Screen name="live" />
-      <Drawer.Screen name="journal" />
-      <Drawer.Screen name="emissions" />
-      <Drawer.Screen name="advertising/create" />
-      <Drawer.Screen name="breaking-news" />
-      <Drawer.Screen name="contact" />
-      <Drawer.Screen name="profile" />
-      <Drawer.Screen name="settings" />
-      <Drawer.Screen name="auth/login" />
-      <Drawer.Screen name="auth/register" />
-    </Drawer>
+    <View style={{ flex: 1 }}>
+      <Drawer
+        drawerContent={CustomDrawerContent}
+        screenOptions={{
+          drawerStyle: {
+            backgroundColor: 'transparent',
+          },
+          overlayColor: 'rgba(0, 0, 0, 0.7)',
+          drawerType: 'slide',
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: BURKINA_COLORS.primary,
+            height: 90,
+          },
+          headerTintColor: 'white',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 18,
+          },
+          headerTitle: () => (
+            <View style={styles.headerContainer}>
+              <Image 
+                source={{ uri: 'https://customer-assets.emergentagent.com/job_lcatv-burkina/artifacts/a7zhvpqx_lcall.jpg' }}
+                style={styles.headerLogo}
+                resizeMode="contain"
+              />
+              <Text style={styles.headerTitle}>LCA TV</Text>
+            </View>
+          ),
+          headerTitleAlign: 'left',
+        }}
+      >
+        <Drawer.Screen name="index" />
+        <Drawer.Screen name="live" />
+        <Drawer.Screen name="journal" />
+        <Drawer.Screen name="emissions" />
+        <Drawer.Screen name="advertising/create" />
+        <Drawer.Screen name="breaking-news" />
+        <Drawer.Screen name="contact" />
+        <Drawer.Screen name="profile" />
+        <Drawer.Screen name="settings" />
+        <Drawer.Screen name="auth/login" />
+        <Drawer.Screen name="auth/register" />
+      </Drawer>
+      
+      {/* Breaking News Ticker - Global */}
+      <BreakingNewsTicker />
+    </View>
   );
 }
 
