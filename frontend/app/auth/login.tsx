@@ -10,12 +10,27 @@ import {
   Platform,
   ScrollView,
   SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+
+const { width, height } = Dimensions.get('window');
+
+// LCA TV Colors with organic design inspiration
+const COLORS = {
+  primary: '#2563EB', // LCA Blue
+  secondary: '#FCD116', // Burkina Yellow
+  accent: '#CE1126', // Burkina Red
+  dark: '#1E293B', // Modern dark blue
+  light: '#F8FAFC',
+  white: '#FFFFFF',
+  organic1: '#3B82F6', // Bright blue
+  organic2: '#06B6D4', // Cyan
+};
 
 export default function LoginScreen() {
   const [formData, setFormData] = useState({
