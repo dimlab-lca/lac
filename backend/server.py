@@ -1004,6 +1004,227 @@ async def get_youtube_video_info(video_id: str):
     except:
         return {"title": "Vidéo", "thumbnail": ""}
 
+# ===== ENDPOINTS PROFIL UTILISATEUR =====
+
+@app.get("/api/users/{user_id}/profile")
+async def get_user_profile(user_id: str):
+    """Récupérer le profil complet d'un utilisateur"""
+    try:
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Calculer les statistiques d'utilisation
+        comments_count = comments_collection.count_documents({"user_email": user["email"]})
+        
+        # Statistiques simulées (à remplacer par de vraies données)
+        stats = {
+            "comments_count": comments_count,
+            "videos_watched": 156,
+            "watch_time_minutes": 2340,
+            "favorite_shows": ["Journal LCA TV", "Check Point", "Franc Parler"]
+        }
+        
+        profile = {
+            "id": str(user["_id"]),
+            "email": user["email"],
+            "full_name": user["full_name"],
+            "phone": user.get("phone", ""),
+            "date_of_birth": user.get("date_of_birth", ""),
+            "location": user.get("location", ""),
+            "profile_picture": user.get("profile_picture", ""),
+            "is_verified": user.get("is_verified", False),
+            "subscription_type": user.get("subscription_type", "free"),
+            "preferences": user.get("preferences", {
+                "categories": [],
+                "language": "français",
+                "notifications": True
+            }),
+            "created_at": user["created_at"].isoformat() if user.get("created_at") else "",
+            "last_login": user.get("last_login", "").isoformat() if user.get("last_login") else "",
+            "stats": stats
+        }
+        
+        logger.info(f"✅ Profil récupéré pour l'utilisateur {user_id}")
+        return profile
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la récupération du profil: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/users/{user_id}/profile")
+async def update_user_profile(user_id: str, profile_update: UserProfileUpdate):
+    """Mettre à jour le profil d'un utilisateur"""
+    try:
+        # Préparer les données à mettre à jour
+        update_data = {}
+        if profile_update.full_name is not None:
+            update_data["full_name"] = profile_update.full_name
+        if profile_update.phone is not None:
+            update_data["phone"] = profile_update.phone
+        if profile_update.location is not None:
+            update_data["location"] = profile_update.location
+        if profile_update.date_of_birth is not None:
+            update_data["date_of_birth"] = profile_update.date_of_birth
+        if profile_update.profile_picture is not None:
+            update_data["profile_picture"] = profile_update.profile_picture
+        
+        update_data["updated_at"] = datetime.now()
+        
+        # Mettre à jour en base
+        result = users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        
+        if result.modified_count > 0:
+            logger.info(f"✅ Profil mis à jour pour l'utilisateur {user_id}")
+            return {"message": "Profil mis à jour avec succès"}
+        else:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+            
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la mise à jour du profil: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/users/{user_id}/preferences")
+async def update_user_preferences(user_id: str, preferences_update: UserPreferencesUpdate):
+    """Mettre à jour les préférences d'un utilisateur"""
+    try:
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Récupérer les préférences actuelles
+        current_preferences = user.get("preferences", {})
+        
+        # Mettre à jour les préférences
+        if preferences_update.categories is not None:
+            current_preferences["categories"] = preferences_update.categories
+        if preferences_update.language is not None:
+            current_preferences["language"] = preferences_update.language
+        if preferences_update.notifications is not None:
+            current_preferences["notifications"] = preferences_update.notifications
+        
+        # Sauvegarder en base
+        result = users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "preferences": current_preferences,
+                "updated_at": datetime.now()
+            }}
+        )
+        
+        if result.modified_count > 0:
+            logger.info(f"✅ Préférences mises à jour pour l'utilisateur {user_id}")
+            return {"message": "Préférences mises à jour avec succès"}
+        else:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+            
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la mise à jour des préférences: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/users/{user_id}/stats")
+async def get_user_statistics(user_id: str):
+    """Récupérer les statistiques d'utilisation d'un utilisateur"""
+    try:
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Compter les commentaires de l'utilisateur
+        comments_count = comments_collection.count_documents({"user_email": user["email"]})
+        
+        # Récupérer les commentaires avec likes pour calculer l'engagement
+        user_comments = list(comments_collection.find({"user_email": user["email"]}))
+        total_likes = sum([comment.get("likes", 0) for comment in user_comments])
+        
+        # Statistiques simulées (à remplacer par de vraies données d'analytics)
+        stats = {
+            "comments_count": comments_count,
+            "total_likes_received": total_likes,
+            "videos_watched": 156,  # À implémenter avec un système de tracking
+            "watch_time_minutes": 2340,  # À implémenter avec un système de tracking
+            "favorite_shows": ["Journal LCA TV", "Check Point", "Franc Parler"],
+            "most_active_day": "Lundi",
+            "average_session_minutes": 45,
+            "last_comment_date": user_comments[-1]["created_at"].isoformat() if user_comments else None
+        }
+        
+        logger.info(f"✅ Statistiques récupérées pour l'utilisateur {user_id}")
+        return stats
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la récupération des statistiques: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/users/{user_id}/favorite-shows")
+async def add_favorite_show(user_id: str, show_data: dict):
+    """Ajouter une émission aux favoris"""
+    try:
+        show_name = show_data.get("show_name")
+        if not show_name:
+            raise HTTPException(status_code=400, detail="Nom de l'émission requis")
+        
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Récupérer les favoris actuels
+        current_stats = user.get("stats", {})
+        favorite_shows = current_stats.get("favorite_shows", [])
+        
+        if show_name not in favorite_shows:
+            favorite_shows.append(show_name)
+            
+            # Mettre à jour en base
+            current_stats["favorite_shows"] = favorite_shows
+            users_collection.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"stats": current_stats, "updated_at": datetime.now()}}
+            )
+            
+            logger.info(f"✅ Émission '{show_name}' ajoutée aux favoris de l'utilisateur {user_id}")
+            return {"message": "Émission ajoutée aux favoris"}
+        else:
+            return {"message": "Émission déjà dans les favoris"}
+            
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de l'ajout aux favoris: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/users/{user_id}/favorite-shows/{show_name}")
+async def remove_favorite_show(user_id: str, show_name: str):
+    """Retirer une émission des favoris"""
+    try:
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Récupérer les favoris actuels
+        current_stats = user.get("stats", {})
+        favorite_shows = current_stats.get("favorite_shows", [])
+        
+        if show_name in favorite_shows:
+            favorite_shows.remove(show_name)
+            
+            # Mettre à jour en base
+            current_stats["favorite_shows"] = favorite_shows
+            users_collection.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"stats": current_stats, "updated_at": datetime.now()}}
+            )
+            
+            logger.info(f"✅ Émission '{show_name}' retirée des favoris de l'utilisateur {user_id}")
+            return {"message": "Émission retirée des favoris"}
+        else:
+            return {"message": "Émission non trouvée dans les favoris"}
+            
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la suppression des favoris: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Health Check
 @app.get("/api/health")
 async def health_check():
