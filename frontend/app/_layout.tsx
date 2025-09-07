@@ -469,5 +469,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     marginRight: 8,
+    borderRadius: 16,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
