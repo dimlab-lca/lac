@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,25 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  Dimensions,
+  Image,
+  TextInput,
   Alert,
+  FlatList,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
+
+const { width, height } = Dimensions.get('window');
 
 // Burkina Faso Colors
 const BURKINA_COLORS = {
   primary: '#009639',
-  secondary: '#FCD116',
+  secondary: '#FCD116', 
   accent: '#CE1126',
   dark: '#1a1a1a',
   light: '#f8f9fa',
