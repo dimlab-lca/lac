@@ -69,161 +69,245 @@ interface UserComment {
 }
 
 export default function ProfileScreen() {
-  const [user, setUser] = useState({
-    name: 'Utilisateur Demo',
-    email: 'demo@lcatv.bf',
-    phone: '+226 70 XX XX XX',
-    location: 'Ouagadougou, Burkina Faso',
-    memberSince: 'Décembre 2024',
-    favoriteCategories: ['Actualités', 'Culture', 'Sport'],
-    watchTime: '24h 35min',
-    subscriptions: 3
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [userComments, setUserComments] = useState<UserComment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    phone: '',
+    location: '',
   });
+  const [activeTab, setActiveTab] = useState('info'); // 'info', 'comments', 'stats', 'settings'
   
   const navigation = useNavigation();
 
-  const profileOptions = [
-    {
-      title: 'Mes Informations',
-      subtitle: 'Modifier mon profil',
-      icon: 'person-outline',
-      color: BURKINA_COLORS.primary,
-      action: () => handleProfileEdit()
-    },
-    {
-      title: 'Émissions Favorites',
-      subtitle: `${user.favoriteCategories.length} catégories suivies`,
-      icon: 'heart-outline',
-      color: BURKINA_COLORS.accent,
-      action: () => handleFavorites()
-    },
-    {
-      title: 'Historique de Visionnage',
-      subtitle: `${user.watchTime} regardées`,
-      icon: 'time-outline',
-      color: BURKINA_COLORS.secondary,
-      action: () => handleHistory()
-    },
-    {
-      title: 'Notifications',
-      subtitle: 'Gérer les alertes',
-      icon: 'notifications-outline',
-      color: BURKINA_COLORS.primary,
-      action: () => handleNotifications()
-    },
-    {
-      title: 'Abonnements',
-      subtitle: `${user.subscriptions} services actifs`,
-      icon: 'card-outline',
-      color: BURKINA_COLORS.accent,
-      action: () => handleSubscriptions()
-    },
-    {
-      title: 'Paramètres',
-      subtitle: 'Configuration de l\'app',
-      icon: 'settings-outline',
-      color: BURKINA_COLORS.dark,
-      action: () => navigation.navigate('settings' as never)
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+
+      // Simuler des données utilisateur pour la démo
+      const mockUser: UserProfile = {
+        id: '1',
+        email: 'utilisateur@lcatv.bf',
+        full_name: 'Amadou Traoré',
+        phone: '+226 70 12 34 56',
+        date_of_birth: '1990-05-15',
+        location: 'Ouagadougou, Burkina Faso',
+        profile_picture: '',
+        is_verified: true,
+        subscription_type: 'premium',
+        preferences: {
+          categories: ['journal', 'culture', 'sport'],
+          language: 'français',
+          notifications: true,
+        },
+        created_at: '2024-01-15T10:00:00Z',
+        last_login: new Date().toISOString(),
+        stats: {
+          comments_count: 24,
+          videos_watched: 156,
+          watch_time_minutes: 2340,
+          favorite_shows: ['Journal LCA TV', 'Check Point', 'Franc Parler'],
+        },
+      };
+
+      setUser(mockUser);
+      setEditForm({
+        full_name: mockUser.full_name,
+        phone: mockUser.phone,
+        location: mockUser.location,
+      });
+
+      // Charger les commentaires de l'utilisateur
+      await loadUserComments();
+
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const stats = [
-    {
-      label: 'Temps de visionnage',
-      value: user.watchTime,
-      icon: 'play-circle',
-      color: BURKINA_COLORS.primary
-    },
-    {
-      label: 'Émissions suivies',
-      value: user.favoriteCategories.length.toString(),
-      icon: 'star',
-      color: BURKINA_COLORS.secondary
-    },
-    {
-      label: 'Abonnements',
-      value: user.subscriptions.toString(),
-      icon: 'card',
-      color: BURKINA_COLORS.accent
+  const loadUserComments = async () => {
+    try {
+      if (!user?.email) return;
+
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/users/${user.email}/comments`);
+      const comments = await response.json();
+      setUserComments(comments);
+    } catch (error) {
+      console.error('Error loading user comments:', error);
     }
-  ];
-
-  const handleProfileEdit = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert('Modification du profil', 'Fonctionnalité bientôt disponible');
   };
 
-  const handleFavorites = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert('Émissions Favorites', 'Vos catégories préférées: ' + user.favoriteCategories.join(', '));
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadUserProfile();
+    setRefreshing(false);
   };
 
-  const handleHistory = () => {
+  const handleEditProfile = () => {
+    setEditing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert('Historique', `Vous avez regardé ${user.watchTime} de contenu LCA TV`);
   };
 
-  const handleNotifications = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert('Notifications', 'Configuration des notifications');
+  const handleSaveProfile = async () => {
+    try {
+      // Ici on enverrait les données au backend
+      console.log('Saving profile:', editForm);
+      
+      if (user) {
+        setUser({
+          ...user,
+          full_name: editForm.full_name,
+          phone: editForm.phone,
+          location: editForm.location,
+        });
+      }
+
+      setEditing(false);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      Alert.alert('Succès', 'Profil mis à jour avec succès !');
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de mettre à jour le profil');
+    }
   };
 
-  const handleSubscriptions = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert('Abonnements', `Vous avez ${user.subscriptions} services actifs`);
+  const handleCancelEdit = () => {
+    if (user) {
+      setEditForm({
+        full_name: user.full_name,
+        phone: user.phone,
+        location: user.location,
+      });
+    }
+    setEditing(false);
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Déconnecter', 
-          style: 'destructive',
-          onPress: () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            Alert.alert('Déconnecté', 'Vous avez été déconnecté avec succès');
-          }
-        }
-      ]
+  const handleChangeProfilePicture = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        // Ici on uploadrait l'image au backend
+        console.log('New profile picture:', result.assets[0].uri);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de changer la photo de profil');
+    }
+  };
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const formatWatchTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h ${remainingMinutes}min`;
+  };
+
+  const renderProfileHeader = () => {
+    if (!user) return null;
+
+    return (
+      <View style={styles.profileHeader}>
+        <LinearGradient
+          colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+          style={styles.profileGradient}
+        >
+          <View style={styles.profileImageContainer}>
+            <TouchableOpacity onPress={handleChangeProfilePicture}>
+              {user.profile_picture ? (
+                <Image source={{ uri: user.profile_picture }} style={styles.profileImage} />
+              ) : (
+                <View style={styles.profileImagePlaceholder}>
+                  <Ionicons name="person" size={60} color="white" />
+                </View>
+              )}
+              <View style={styles.cameraIcon}>
+                <Ionicons name="camera" size={16} color="white" />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.profileInfo}>
+            <View style={styles.nameContainer}>
+              <Text style={styles.userName}>{user.full_name}</Text>
+              {user.is_verified && (
+                <Ionicons name="checkmark-circle" size={20} color="#FFD700" style={styles.verifiedIcon} />
+              )}
+            </View>
+            
+            <Text style={styles.userEmail}>{user.email}</Text>
+            
+            <View style={styles.subscriptionBadge}>
+              <Ionicons 
+                name={user.subscription_type === 'premium' ? 'star' : 'person'} 
+                size={16} 
+                color="white" 
+              />
+              <Text style={styles.subscriptionText}>
+                {user.subscription_type === 'premium' ? 'Premium' : 'Gratuit'}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
+      </View>
     );
   };
 
-  const renderStatCard = (stat: any, index: number) => (
-    <View key={index} style={styles.statCard}>
-      <BlurView intensity={20} style={styles.statBlur}>
-        <View style={styles.statContent}>
-          <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}>
-            <Ionicons name={stat.icon} size={20} color={stat.color} />
-          </View>
-          <Text style={styles.statValue}>{stat.value}</Text>
-          <Text style={styles.statLabel}>{stat.label}</Text>
-        </View>
-      </BlurView>
-    </View>
-  );
+  const renderTabBar = () => {
+    const tabs = [
+      { key: 'info', label: 'Infos', icon: 'person-outline' },
+      { key: 'comments', label: 'Commentaires', icon: 'chatbubbles-outline' },
+      { key: 'stats', label: 'Statistiques', icon: 'analytics-outline' },
+      { key: 'settings', label: 'Paramètres', icon: 'settings-outline' },
+    ];
 
-  const renderOptionCard = (option: any, index: number) => (
-    <TouchableOpacity
-      key={index}
-      style={styles.optionCard}
-      onPress={option.action}
-      activeOpacity={0.8}
-    >
-      <View style={styles.optionContent}>
-        <View style={[styles.optionIcon, { backgroundColor: `${option.color}20` }]}>
-          <Ionicons name={option.icon} size={20} color={option.color} />
-        </View>
-        <View style={styles.optionText}>
-          <Text style={styles.optionTitle}>{option.title}</Text>
-          <Text style={styles.optionSubtitle}>{option.subtitle}</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+    return (
+      <View style={styles.tabBar}>
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[styles.tab, activeTab === tab.key && styles.activeTab]}
+            onPress={() => {
+              setActiveTab(tab.key);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
+          >
+            <Ionicons 
+              name={tab.icon as any} 
+              size={20} 
+              color={activeTab === tab.key ? BURKINA_COLORS.primary : '#6b7280'} 
+            />
+            <Text style={[
+              styles.tabText,
+              activeTab === tab.key && styles.activeTabText
+            ]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
