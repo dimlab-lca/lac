@@ -116,6 +116,18 @@ class Comment(BaseModel):
     user_email: Optional[str] = None
     created_at: Optional[datetime] = None
 
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    profile_picture: Optional[str] = None
+
+class UserPreferencesUpdate(BaseModel):
+    categories: Optional[List[str]] = None
+    language: Optional[str] = None
+    notifications: Optional[bool] = None
+
 class YouTubeVideo(BaseModel):
     id: str
     title: str
