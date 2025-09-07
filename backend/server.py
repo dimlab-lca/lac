@@ -128,6 +128,24 @@ class UserPreferencesUpdate(BaseModel):
     language: Optional[str] = None
     notifications: Optional[bool] = None
 
+class UserStats(BaseModel):
+    comments_count: int = 0
+    videos_watched: int = 0
+    watch_time_minutes: int = 0
+    favorite_shows: List[str] = []
+
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    profile_picture: Optional[str] = None
+
+class UserPreferencesUpdate(BaseModel):
+    categories: Optional[List[str]] = None
+    language: Optional[str] = None
+    notifications: Optional[bool] = None
+
 class YouTubeVideo(BaseModel):
     id: str
     title: str
