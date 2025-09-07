@@ -7,275 +7,347 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  Dimensions,
+  Image,
+  FlatList,
   RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 
+const { width, height } = Dimensions.get('window');
+
 // Burkina Faso Colors
 const BURKINA_COLORS = {
   primary: '#009639',
-  secondary: '#FCD116',
+  secondary: '#FCD116', 
   accent: '#CE1126',
   dark: '#1a1a1a',
   light: '#f8f9fa',
   white: '#ffffff'
 };
 
-interface NewsArticle {
+interface JournalVideo {
   id: string;
   title: string;
-  summary: string;
+  description: string;
+  thumbnail: string;
+  duration: string;
+  view_count: string;
+  like_count: string;
+  published_at: string;
   category: string;
-  publishedAt: string;
-  readTime: string;
-  isBreaking: boolean;
 }
 
 export default function JournalScreen() {
-  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [journalVideos, setJournalVideos] = useState<JournalVideo[]>([]);
+  const [featuredVideo, setFeaturedVideo] = useState<JournalVideo | null>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedVideo, setSelectedVideo] = useState<JournalVideo | null>(null);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   
   const navigation = useNavigation();
 
-  const categories = [
-    { key: 'all', label: 'Tout', icon: 'newspaper-outline' },
-    { key: 'politique', label: 'Politique', icon: 'people-outline' },
-    { key: 'economie', label: 'Économie', icon: 'trending-up-outline' },
-    { key: 'social', label: 'Social', icon: 'heart-outline' },
-    { key: 'sport', label: 'Sport', icon: 'football-outline' },
-    { key: 'international', label: 'International', icon: 'globe-outline' },
-  ];
-
   useEffect(() => {
-    loadArticles();
+    loadJournalVideos();
   }, []);
 
-  const loadArticles = () => {
-    // Simulate news articles
-    const mockArticles: NewsArticle[] = [
-      {
-        id: '1',
-        title: 'Le Président du Faso inaugure une nouvelle université à Ouagadougou',
-        summary: 'Cette nouvelle infrastructure éducative va accueillir plus de 5000 étudiants dès la rentrée prochaine.',
-        category: 'social',
-        publishedAt: '2024-12-15T10:30:00Z',
-        readTime: '3 min',
-        isBreaking: true
-      },
-      {
-        id: '2',
-        title: 'Agriculture: Bonne campagne agricole 2024 au Burkina Faso',
-        summary: 'Les premières estimations montrent une augmentation de 15% de la production céréalière cette année.',
-        category: 'economie',
-        publishedAt: '2024-12-15T08:45:00Z',
-        readTime: '4 min',
-        isBreaking: false
-      },
-      {
-        id: '3',
-        title: 'Les Étalons du Burkina qualifiés pour la CAN 2025',
-        summary: 'L\'équipe nationale de football décroche son billet pour la Coupe d\'Afrique des Nations.',
-        category: 'sport',
-        publishedAt: '2024-12-14T22:15:00Z',
-        readTime: '2 min',
-        isBreaking: false
-      },
-      {
-        id: '4',
-        title: 'Sommet de la CEDEAO: Le Burkina défend sa position',
-        summary: 'Les dirigeants ouest-africains se réunissent pour discuter des défis régionaux.',
-        category: 'international',
-        publishedAt: '2024-12-14T16:20:00Z',
-        readTime: '5 min',
-        isBreaking: false
+  const loadJournalVideos = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/journal/playlist?limit=30`);
+      const videos: JournalVideo[] = await response.json();
+      
+      if (videos && videos.length > 0) {
+        setFeaturedVideo(videos[0]); // Le dernier journal comme hero
+        setJournalVideos(videos);
       }
-    ];
-    
-    setArticles(mockArticles);
+      
+    } catch (error) {
+      console.error('Error loading journal videos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadJournalVideos();
     setRefreshing(false);
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadArticles();
-  };
-
-  const handleCategoryPress = (category: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedCategory(category);
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  const formatDuration = (duration: string): string => {
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return duration;
     
-    if (diffHours < 1) return 'Il y a moins d\'1h';
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    return `Il y a ${Math.floor(diffHours / 24)} jour(s)`;
+    const hours = match[1] ? parseInt(match[1]) : 0;
+    const minutes = match[2] ? parseInt(match[2]) : 0;
+    const seconds = match[3] ? parseInt(match[3]) : 0;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const filteredArticles = selectedCategory === 'all' 
-    ? articles 
-    : articles.filter(article => article.category === selectedCategory);
+  const formatViewCount = (viewCount: string): string => {
+    const count = parseInt(viewCount);
+    if (count >= 1000000) {
+      return `${(count / 1000000).toFixed(1)}M`;
+    } else if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toString();
+  };
 
-  const renderCategoryFilter = () => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.categoryContainer}
-      contentContainerStyle={styles.categoryContent}
-    >
-      {categories.map((category) => (
-        <TouchableOpacity
-          key={category.key}
-          style={[
-            styles.categoryButton,
-            selectedCategory === category.key && styles.categoryButtonActive
-          ]}
-          onPress={() => handleCategoryPress(category.key)}
-          activeOpacity={0.7}
+  const formatTimeAgo = (publishedAt: string): string => {
+    const published = new Date(publishedAt);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - published.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Il y a moins d\'1h';
+    if (diffInHours < 24) return `Il y a ${diffInHours}h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    return `Il y a ${diffInWeeks} semaine${diffInWeeks > 1 ? 's' : ''}`;
+  };
+
+  const handleVideoPress = (video: JournalVideo) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedVideo(video);
+    setShowVideoPlayer(true);
+  };
+
+  const renderHeroVideo = () => {
+    if (!featuredVideo) return null;
+
+    return (
+      <View style={styles.heroContainer}>
+        <TouchableOpacity 
+          style={styles.heroTouchable}
+          onPress={() => handleVideoPress(featuredVideo)}
+          activeOpacity={0.9}
         >
-          <Ionicons
-            name={category.icon as any}
-            size={18}
-            color={selectedCategory === category.key ? 'white' : BURKINA_COLORS.primary}
+          <Image 
+            source={{ uri: featuredVideo.thumbnail }}
+            style={styles.heroImage}
+            resizeMode="cover"
           />
-          <Text style={[
-            styles.categoryText,
-            selectedCategory === category.key && styles.categoryTextActive
-          ]}>
-            {category.label}
-          </Text>
+          
+          {/* Play Overlay */}
+          <View style={styles.heroOverlay}>
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.7)']}
+              style={styles.heroGradient}
+            />
+            
+            <View style={styles.heroPlayButton}>
+              <Ionicons name="play" size={60} color="white" />
+            </View>
+            
+            <View style={styles.heroContent}>
+              <View style={styles.heroBadge}>
+                <Ionicons name="radio" size={16} color="white" />
+                <Text style={styles.heroBadgeText}>DERNIER JOURNAL</Text>
+              </View>
+              
+              <Text style={styles.heroTitle} numberOfLines={2}>
+                {featuredVideo.title}
+              </Text>
+              
+              <View style={styles.heroMeta}>
+                <Text style={styles.heroMetaText}>
+                  {formatViewCount(featuredVideo.view_count)} vues • {formatTimeAgo(featuredVideo.published_at)}
+                </Text>
+                <Text style={styles.heroMetaText}>
+                  ⏱️ {formatDuration(featuredVideo.duration)}
+                </Text>
+              </View>
+            </View>
+          </View>
         </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+      </View>
+    );
+  };
 
-  const renderArticleCard = (article: NewsArticle) => (
-    <TouchableOpacity
-      key={article.id}
-      style={styles.articleCard}
-      activeOpacity={0.9}
-      onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+  const renderReplayItem = ({ item }: { item: JournalVideo }) => (
+    <TouchableOpacity 
+      style={styles.replayCard}
+      onPress={() => handleVideoPress(item)}
+      activeOpacity={0.8}
     >
-      {article.isBreaking && (
-        <View style={styles.breakingBadge}>
-          <Text style={styles.breakingText}>URGENT</Text>
-        </View>
-      )}
-      
-      <View style={styles.articleContent}>
-        <Text style={styles.articleTitle}>{article.title}</Text>
-        <Text style={styles.articleSummary}>{article.summary}</Text>
-        
-        <View style={styles.articleMeta}>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>
-              {categories.find(c => c.key === article.category)?.label || 'Général'}
-            </Text>
-          </View>
-          <View style={styles.metaInfo}>
-            <Text style={styles.metaText}>{formatTime(article.publishedAt)}</Text>
-            <Text style={styles.metaDot}>•</Text>
-            <Text style={styles.metaText}>{article.readTime}</Text>
-          </View>
+      <View style={styles.replayImageContainer}>
+        <Image 
+          source={{ uri: item.thumbnail }}
+          style={styles.replayImage}
+          resizeMode="cover"
+        />
+        <View style={styles.replayDuration}>
+          <Text style={styles.replayDurationText}>{formatDuration(item.duration)}</Text>
         </View>
       </View>
       
-      <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+      <View style={styles.replayInfo}>
+        <Text style={styles.replayTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text style={styles.replayMeta}>
+          {formatViewCount(item.view_count)} vues
+        </Text>
+        <Text style={styles.replayTime}>
+          {formatTimeAgo(item.published_at)}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
+
+  const renderVideoPlayer = () => {
+    if (!showVideoPlayer || !selectedVideo) return null;
+
+    return (
+      <View style={styles.videoPlayerModal}>
+        <View style={styles.videoPlayerContainer}>
+          <View style={styles.videoPlayerHeader}>
+            <Text style={styles.videoPlayerTitle} numberOfLines={2}>
+              {selectedVideo.title}
+            </Text>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => {
+                setShowVideoPlayer(false);
+                setSelectedVideo(null);
+              }}
+            >
+              <Ionicons name="close" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.videoPlayerContent}>
+            <iframe
+              src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&modestbranding=1&rel=0&showinfo=0&controls=1`}
+              style={{
+                width: '100%',
+                height: 250,
+                border: 'none',
+              }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen={true}
+            />
+          </View>
+          
+          <View style={styles.videoPlayerInfo}>
+            <Text style={styles.videoPlayerMeta}>
+              {formatViewCount(selectedVideo.view_count)} vues • {selectedVideo.like_count} ❤️ • {formatTimeAgo(selectedVideo.published_at)}
+            </Text>
+            <Text style={styles.videoPlayerDescription} numberOfLines={5}>
+              {selectedVideo.description}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <LinearGradient
+            colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+            style={styles.loadingGradient}
+          >
+            <Ionicons name="newspaper" size={60} color="white" />
+            <Text style={styles.loadingText}>Chargement du journal...</Text>
+          </LinearGradient>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.primary} />
       
-      {/* Header */}
-      <LinearGradient
-        colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>Journal & Actualités</Text>
-            <Text style={styles.headerSubtitle}>Les dernières nouvelles</Text>
-          </View>
-          <TouchableOpacity style={styles.searchButton}>
-            <Ionicons name="search-outline" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-
-      <ScrollView
-        style={styles.scrollView}
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[BURKINA_COLORS.primary]}
             tintColor={BURKINA_COLORS.primary}
+            colors={[BURKINA_COLORS.primary]}
           />
         }
-        showsVerticalScrollIndicator={false}
       >
-        {/* Breaking News Banner */}
-        <View style={styles.breakingBanner}>
-          <LinearGradient
-            colors={[BURKINA_COLORS.accent, '#dc2626']}
-            style={styles.breakingGradient}
-          >
-            <Ionicons name="flash" size={20} color="white" />
-            <Text style={styles.breakingBannerText}>
-              Dernières actualités en temps réel
-            </Text>
-          </LinearGradient>
-        </View>
+        {/* Hero Section - Dernier Journal */}
+        {renderHeroVideo()}
 
-        {/* Category Filter */}
-        {renderCategoryFilter()}
-
-        {/* Articles Section */}
-        <View style={styles.articlesSection}>
+        {/* Replays Section */}
+        <View style={styles.replaysSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {selectedCategory === 'all' ? 'Toutes les Actualités' : 
-               categories.find(c => c.key === selectedCategory)?.label}
-            </Text>
-            <Text style={styles.sectionSubtitle}>
-              {filteredArticles.length} article{filteredArticles.length > 1 ? 's' : ''}
-            </Text>
+            <View style={styles.sectionTitleContainer}>
+              <Ionicons name="play-back" size={20} color={BURKINA_COLORS.primary} />
+              <Text style={styles.sectionTitle}>Replay Journal</Text>
+            </View>
+            <Text style={styles.sectionSubtitle}>{journalVideos.length} épisodes</Text>
           </View>
-
-          {filteredArticles.map(renderArticleCard)}
+          
+          <FlatList
+            data={journalVideos.slice(1)} // Exclure le premier qui est en hero
+            renderItem={renderReplayItem}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.replaysList}
+            ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+          />
         </View>
 
-        {/* Emergency Contact */}
-        <View style={styles.emergencySection}>
-          <BlurView intensity={20} style={styles.emergencyBlur}>
-            <View style={styles.emergencyContent}>
-              <Ionicons name="call" size={24} color={BURKINA_COLORS.accent} />
-              <View style={styles.emergencyText}>
-                <Text style={styles.emergencyTitle}>Contactez la Rédaction</Text>
-                <Text style={styles.emergencyDescription}>
-                  +226 25 XX XX XX • redaction@lcatv.bf
-                </Text>
+        {/* Informations Section */}
+        <View style={styles.infoSection}>
+          <View style={styles.infoHeader}>
+            <Ionicons name="information-circle" size={24} color={BURKINA_COLORS.primary} />
+            <Text style={styles.infoTitle}>À propos du Journal LCA TV</Text>
+          </View>
+          
+          <View style={styles.infoContent}>
+            <Text style={styles.infoDescription}>
+              Le Journal de LCA TV vous présente l'actualité du Burkina Faso et de l'Afrique de l'Ouest. 
+              Retrouvez chaque jour les informations essentielles avec nos journalistes professionnels.
+            </Text>
+            
+            <View style={styles.infoStats}>
+              <View style={styles.infoStat}>
+                <Text style={styles.infoStatNumber}>{journalVideos.length}</Text>
+                <Text style={styles.infoStatLabel}>Épisodes</Text>
+              </View>
+              <View style={styles.infoStat}>
+                <Text style={styles.infoStatNumber}>Quotidien</Text>
+                <Text style={styles.infoStatLabel}>Diffusion</Text>
+              </View>
+              <View style={styles.infoStat}>
+                <Text style={styles.infoStatNumber}>20h00</Text>
+                <Text style={styles.infoStatLabel}>Horaire</Text>
               </View>
             </View>
-          </BlurView>
+            
+            <TouchableOpacity style={styles.subscribeButton}>
+              <Ionicons name="notifications" size={20} color="white" />
+              <Text style={styles.subscribeText}>Être notifié des nouveaux journaux</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+        
+        <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Video Player Modal */}
+      {renderVideoPlayer()}
     </SafeAreaView>
   );
 }
