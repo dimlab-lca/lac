@@ -115,20 +115,24 @@ const BreakingNewsTicker: React.FC = () => {
   };
 
   const startScrollAnimation = () => {
-    // Reset animation
-    scrollX.setValue(width);
+    // Reset animation - commencer de droite
+    scrollX.setValue(width * 0.5);
     
-    const totalWidth = width + (newsItems.length * 500); // Plus d'espace pour chaque item
+    // Calculer largeur basée sur le contenu réel
+    const itemWidth = 450; // Largeur par item
+    const totalContentWidth = newsItems.length * itemWidth;
+    const totalWidth = totalContentWidth + width; // Ajouter largeur écran pour transition
     
     const animate = () => {
       Animated.timing(scrollX, {
-        toValue: -totalWidth,
-        duration: newsItems.length * 12000, // Plus lent pour meilleure lisibilité
+        toValue: -totalContentWidth,
+        duration: Math.max(20000, newsItems.length * 6000), // Au moins 20 secondes
         useNativeDriver: false, // Compatibilité web
       }).start(({ finished }) => {
         if (finished) {
-          scrollX.setValue(width);
-          animate(); // Recommencer
+          // Recommencer immédiatement 
+          scrollX.setValue(width * 0.5);
+          setTimeout(animate, 100); // Petit délai pour éviter les bugs
         }
       });
     };
