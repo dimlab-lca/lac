@@ -44,9 +44,9 @@ interface BreakingNews {
   created_at: string;
 }
 
-// Burkina Faso Colors
+// LCA TV Colors (Updated with Blue Theme)
 const BURKINA_COLORS = {
-  primary: '#009639', // Green from flag
+  primary: '#2563EB', // Modern Blue (was green)
   secondary: '#FCD116', // Yellow from flag
   accent: '#CE1126', // Red from flag
   dark: '#1a1a1a',
