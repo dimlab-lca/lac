@@ -692,136 +692,336 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BURKINA_COLORS.light,
   },
-  header: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerText: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  editButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   scrollView: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingGradient: {
+    padding: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  
+  // Profile Header
   profileHeader: {
     margin: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
+    marginTop: 0,
   },
-  profileBlur: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-  },
-  profileContent: {
-    flexDirection: 'row',
+  profileGradient: {
+    borderRadius: 20,
+    padding: 24,
     alignItems: 'center',
-    padding: 20,
   },
-  avatar: {
-    marginRight: 16,
+  profileImageContainer: {
+    position: 'relative',
+    marginBottom: 16,
   },
-  avatarGradient: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 4,
+    borderColor: 'white',
+  },
+  profileImagePlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: 'white',
   },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
+  cameraIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: BURKINA_COLORS.accent,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
   },
   profileInfo: {
-    flex: 1,
+    alignItems: 'center',
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: BURKINA_COLORS.dark,
-    marginBottom: 4,
+    color: 'white',
+    textAlign: 'center',
+  },
+  verifiedIcon: {
+    marginLeft: 8,
   },
   userEmail: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 2,
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 12,
+    textAlign: 'center',
   },
-  userLocation: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 4,
+  subscriptionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-  memberSince: {
+  subscriptionText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+
+  // Tab Bar
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  activeTab: {
+    backgroundColor: BURKINA_COLORS.light,
+  },
+  tabText: {
     fontSize: 12,
-    color: BURKINA_COLORS.primary,
-    fontWeight: '500',
+    color: '#6b7280',
+    marginTop: 4,
+    textAlign: 'center',
   },
-  statsSection: {
+  activeTabText: {
+    color: BURKINA_COLORS.primary,
+    fontWeight: '600',
+  },
+
+  // Tab Content
+  tabContent: {
     paddingHorizontal: 16,
-    marginBottom: 24,
+  },
+  section: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: BURKINA_COLORS.dark,
-    marginBottom: 16,
+    marginLeft: 8,
+    flex: 1,
   },
-  statsGrid: {
+  editButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: BURKINA_COLORS.light,
+  },
+
+  // Info Tab
+  infoGrid: {
+    gap: 16,
+  },
+  infoItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+    paddingBottom: 12,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  infoValue: {
+    fontSize: 16,
+    color: BURKINA_COLORS.dark,
+    fontWeight: '600',
+  },
+  infoInput: {
+    fontSize: 16,
+    color: BURKINA_COLORS.dark,
+    fontWeight: '600',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#f9fafb',
+  },
+  editActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 16,
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#6b7280',
+    fontWeight: '600',
+  },
+  saveButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: BURKINA_COLORS.primary,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  favoriteShows: {
+    gap: 8,
+  },
+  favoriteShow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: BURKINA_COLORS.light,
+    borderRadius: 8,
+  },
+  favoriteShowText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: BURKINA_COLORS.dark,
+    fontWeight: '500',
+  },
+
+  // Comments Tab
+  commentCard: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    padding: 12,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  commentVideoThumb: {
+    width: 40,
+    height: 30,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  commentVideoInfo: {
+    flex: 1,
+  },
+  commentVideoTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BURKINA_COLORS.dark,
+  },
+  commentDate: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  commentLikes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  commentLikesText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+  commentContent: {
+    fontSize: 14,
+    color: BURKINA_COLORS.dark,
+    lineHeight: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+
+  // Stats Tab
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   statCard: {
     flex: 1,
-    marginHorizontal: 4,
+    minWidth: (width - 64) / 2,
+    backgroundColor: '#f9fafb',
     borderRadius: 12,
-    overflow: 'hidden',
-  },
-  statBlur: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-  },
-  statContent: {
-    alignItems: 'center',
     padding: 16,
+    alignItems: 'center',
   },
   statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: BURKINA_COLORS.dark,
     marginBottom: 4,
@@ -831,108 +1031,74 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
   },
-  optionsSection: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
+  activityList: {
+    gap: 12,
   },
-  optionCard: {
-    backgroundColor: BURKINA_COLORS.white,
-    borderRadius: 12,
-    marginBottom: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
   },
-  optionContent: {
+  activityText: {
+    flex: 1,
+    fontSize: 14,
+    color: BURKINA_COLORS.dark,
+    marginLeft: 12,
+  },
+  activityTime: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+
+  // Settings Tab
+  settingsList: {
+    gap: 8,
+  },
+  settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
   },
-  optionIcon: {
+  settingIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: `${BURKINA_COLORS.primary}20`,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
-  optionText: {
+  settingContent: {
     flex: 1,
   },
-  optionTitle: {
+  settingTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: BURKINA_COLORS.dark,
     marginBottom: 2,
   },
-  optionSubtitle: {
+  settingSubtitle: {
     fontSize: 14,
     color: '#6b7280',
-  },
-  actionsSection: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  actionButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  actionGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-  },
-  actionText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  logoutSection: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
   },
   logoutButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  logoutGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    padding: 16,
+    backgroundColor: '#fef2f2',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fecaca',
   },
   logoutText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    color: BURKINA_COLORS.accent,
     marginLeft: 8,
-  },
-  appInfo: {
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-  },
-  appInfoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: BURKINA_COLORS.dark,
-    marginBottom: 4,
-  },
-  appInfoVersion: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  appInfoCopyright: {
-    fontSize: 12,
-    color: '#9ca3af',
-    textAlign: 'center',
   },
 });
