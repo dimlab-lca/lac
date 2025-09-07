@@ -426,9 +426,120 @@ async def get_current_user_info(current_user = Depends(get_current_user)):
 # YouTube Integration Routes
 @app.get("/api/videos/latest")
 async def get_latest_videos(limit: int = 20):
-    """Get latest videos from LCA TV YouTube channel"""
-    videos = await youtube_service.get_channel_videos(limit)
-    return videos
+    """Get latest videos from YouTube channel"""
+    try:
+        response = requests.get(
+            f"https://www.googleapis.com/youtube/v3/search",
+            params={
+                "key": YOUTUBE_API_KEY,
+                "channelId": YOUTUBE_CHANNEL_ID,
+                "part": "snippet",
+                "order": "date",
+                "type": "video",
+                "maxResults": limit
+            }
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"YouTube API error: {response.status_code}")
+            return {"error": "Failed to fetch videos"}
+        
+        data = response.json()
+        videos = []
+        
+        for item in data.get("items", []):
+            video_id = item["id"]["videoId"]
+            
+            # Get video statistics and duration
+            stats_response = requests.get(
+                f"https://www.googleapis.com/youtube/v3/videos",
+                params={
+                    "key": YOUTUBE_API_KEY,
+                    "id": video_id,
+                    "part": "statistics,contentDetails"
+                }
+            )
+            
+            stats_data = stats_response.json().get("items", [{}])[0] if stats_response.status_code == 200 else {}
+            
+            video = {
+                "id": video_id,
+                "title": item["snippet"]["title"],
+                "description": item["snippet"]["description"],
+                "thumbnail": item["snippet"]["thumbnails"]["medium"]["url"],
+                "published_at": item["snippet"]["publishedAt"],
+                "view_count": stats_data.get("statistics", {}).get("viewCount", "0"),
+                "like_count": stats_data.get("statistics", {}).get("likeCount", "0"),
+                "duration": stats_data.get("contentDetails", {}).get("duration", "PT0S"),
+                "category": "general"
+            }
+            videos.append(video)
+        
+        logger.info(f"✅ Synced {len(videos)} videos from YouTube")
+        return videos
+        
+    except Exception as e:
+        logger.error(f"Error fetching YouTube videos: {str(e)}")
+        return {"error": str(e)}
+
+@app.get("/api/journal/playlist")
+async def get_journal_playlist(limit: int = 20):
+    """Get videos from the Journal playlist specifically"""
+    try:
+        playlist_id = "PLk5BkfzB9R2z1LpmM6ZNkSjhJeUCcjcH6"
+        
+        response = requests.get(
+            f"https://www.googleapis.com/youtube/v3/playlistItems",
+            params={
+                "key": YOUTUBE_API_KEY,
+                "playlistId": playlist_id,
+                "part": "snippet",
+                "maxResults": limit,
+                "order": "date"
+            }
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"YouTube Playlist API error: {response.status_code}")
+            return {"error": "Failed to fetch journal playlist"}
+        
+        data = response.json()
+        videos = []
+        
+        for item in data.get("items", []):
+            video_id = item["snippet"]["resourceId"]["videoId"]
+            
+            # Get video statistics and duration
+            stats_response = requests.get(
+                f"https://www.googleapis.com/youtube/v3/videos",
+                params={
+                    "key": YOUTUBE_API_KEY,
+                    "id": video_id,
+                    "part": "statistics,contentDetails"
+                }
+            )
+            
+            stats_data = stats_response.json().get("items", [{}])[0] if stats_response.status_code == 200 else {}
+            
+            video = {
+                "id": video_id,
+                "title": item["snippet"]["title"],
+                "description": item["snippet"]["description"],
+                "thumbnail": item["snippet"]["thumbnails"]["medium"]["url"] if item["snippet"]["thumbnails"]["medium"] else item["snippet"]["thumbnails"]["default"]["url"],
+                "published_at": item["snippet"]["publishedAt"],
+                "view_count": stats_data.get("statistics", {}).get("viewCount", "0"),
+                "like_count": stats_data.get("statistics", {}).get("likeCount", "0"),
+                "duration": stats_data.get("contentDetails", {}).get("duration", "PT0S"),
+                "category": "journal"
+            }
+            videos.append(video)
+        
+        logger.info(f"✅ Loaded {len(videos)} videos from Journal playlist")
+        return videos
+        
+    except Exception as e:
+        logger.error(f"Error fetching Journal playlist: {str(e)}")
+        return {"error": str(e)}
 
 @app.get("/api/videos/category/{category}")
 async def get_videos_by_category(category: str, limit: int = 10):
