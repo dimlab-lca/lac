@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import BreakingNewsTicker from '../components/BreakingNewsTicker';
 
 // LCA TV Colors (Updated with Blue Theme)
 const BURKINA_COLORS = {
