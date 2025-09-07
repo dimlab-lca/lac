@@ -32,6 +32,42 @@ const BURKINA_COLORS = {
   white: '#ffffff'
 };
 
+interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string;
+  date_of_birth: string;
+  location: string;
+  profile_picture: string;
+  is_verified: boolean;
+  subscription_type: string;
+  preferences: {
+    categories: string[];
+    language: string;
+    notifications: boolean;
+  };
+  created_at: string;
+  last_login: string;
+  stats: {
+    comments_count: number;
+    videos_watched: number;
+    watch_time_minutes: number;
+    favorite_shows: string[];
+  };
+}
+
+interface UserComment {
+  id: string;
+  video_id: string;
+  video_title: string;
+  video_thumbnail: string;
+  content: string;
+  likes: number;
+  created_at: string;
+  time_ago: string;
+}
+
 export default function ProfileScreen() {
   const [user, setUser] = useState({
     name: 'Utilisateur Demo',
