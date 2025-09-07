@@ -241,7 +241,7 @@ export default function LCATVApp() {
           >
             <BlurView intensity={20} style={styles.getStartedBlur}>
               <Text style={styles.getStartedText}>Commencer</Text>
-              <Ionicons name="arrow-forward-circle" size={24} color="white" style={styles.getStartedIcon} />
+              <Ionicons name="arrow-forward-circle" size={20} color="white" style={styles.getStartedIcon} />
             </BlurView>
           </TouchableOpacity>
 
