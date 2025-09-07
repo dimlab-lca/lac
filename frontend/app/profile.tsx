@@ -304,10 +304,362 @@ export default function ProfileScreen() {
               {tab.label}
             </Text>
           </TouchableOpacity>
-        ))}
+    );
+  };
+
+  const renderInfoTab = () => {
+    if (!user) return null;
+
+    return (
+      <View style={styles.tabContent}>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="person-outline" size={20} color={BURKINA_COLORS.primary} />
+            <Text style={styles.sectionTitle}>Informations Personnelles</Text>
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={editing ? handleSaveProfile : handleEditProfile}
+            >
+              <Ionicons 
+                name={editing ? 'checkmark' : 'pencil'} 
+                size={16} 
+                color={BURKINA_COLORS.primary} 
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.infoGrid}>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Nom complet</Text>
+              {editing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={editForm.full_name}
+                  onChangeText={(text) => setEditForm({ ...editForm, full_name: text })}
+                  placeholder="Votre nom complet"
+                />
+              ) : (
+                <Text style={styles.infoValue}>{user.full_name}</Text>
+              )}
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Email</Text>
+              <Text style={styles.infoValue}>{user.email}</Text>
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Téléphone</Text>
+              {editing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={editForm.phone}
+                  onChangeText={(text) => setEditForm({ ...editForm, phone: text })}
+                  placeholder="Votre numéro de téléphone"
+                />
+              ) : (
+                <Text style={styles.infoValue}>{user.phone}</Text>
+              )}
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Localisation</Text>
+              {editing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={editForm.location}
+                  onChangeText={(text) => setEditForm({ ...editForm, location: text })}
+                  placeholder="Votre ville, pays"
+                />
+              ) : (
+                <Text style={styles.infoValue}>{user.location}</Text>
+              )}
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Date de naissance</Text>
+              <Text style={styles.infoValue}>{formatDate(user.date_of_birth)}</Text>
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Membre depuis</Text>
+              <Text style={styles.infoValue}>{formatDate(user.created_at)}</Text>
+            </View>
+          </View>
+
+          {editing && (
+            <View style={styles.editActions}>
+              <TouchableOpacity style={styles.cancelButton} onPress={handleCancelEdit}>
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile}>
+                <Text style={styles.saveButtonText}>Enregistrer</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="heart-outline" size={20} color={BURKINA_COLORS.primary} />
+            <Text style={styles.sectionTitle}>Émissions Favorites</Text>
+          </View>
+          
+          <View style={styles.favoriteShows}>
+            {user.stats.favorite_shows.map((show, index) => (
+              <View key={index} style={styles.favoriteShow}>
+                <Ionicons name="tv" size={16} color={BURKINA_COLORS.primary} />
+                <Text style={styles.favoriteShowText}>{show}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
       </View>
     );
   };
+
+  const renderCommentsTab = () => {
+    const renderComment = ({ item }: { item: UserComment }) => (
+      <View style={styles.commentCard}>
+        <View style={styles.commentHeader}>
+          <Image source={{ uri: item.video_thumbnail }} style={styles.commentVideoThumb} />
+          <View style={styles.commentVideoInfo}>
+            <Text style={styles.commentVideoTitle} numberOfLines={1}>
+              {item.video_title}
+            </Text>
+            <Text style={styles.commentDate}>{item.time_ago}</Text>
+          </View>
+          <View style={styles.commentLikes}>
+            <Ionicons name="heart-outline" size={16} color="#6b7280" />
+            <Text style={styles.commentLikesText}>{item.likes}</Text>
+          </View>
+        </View>
+        
+        <Text style={styles.commentContent}>{item.content}</Text>
+      </View>
+    );
+
+    return (
+      <View style={styles.tabContent}>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="chatbubbles-outline" size={20} color={BURKINA_COLORS.primary} />
+            <Text style={styles.sectionTitle}>Mes Commentaires ({userComments.length})</Text>
+          </View>
+
+          {userComments.length > 0 ? (
+            <FlatList
+              data={userComments}
+              renderItem={renderComment}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="chatbubble-outline" size={40} color="#ccc" />
+              <Text style={styles.emptyStateText}>Aucun commentaire pour le moment</Text>
+              <Text style={styles.emptyStateSubtext}>Regardez des vidéos et partagez vos avis !</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderStatsTab = () => {
+    if (!user) return null;
+
+    const stats = [
+      {
+        icon: 'chatbubbles',
+        label: 'Commentaires',
+        value: user.stats.comments_count.toString(),
+        color: BURKINA_COLORS.primary,
+      },
+      {
+        icon: 'play-circle',
+        label: 'Vidéos regardées',
+        value: user.stats.videos_watched.toString(),
+        color: BURKINA_COLORS.secondary,
+      },
+      {
+        icon: 'time',
+        label: 'Temps de visionnage',
+        value: formatWatchTime(user.stats.watch_time_minutes),
+        color: BURKINA_COLORS.accent,
+      },
+      {
+        icon: 'heart',
+        label: 'Émissions favorites',
+        value: user.stats.favorite_shows.length.toString(),
+        color: BURKINA_COLORS.primary,
+      },
+    ];
+
+    return (
+      <View style={styles.tabContent}>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="analytics-outline" size={20} color={BURKINA_COLORS.primary} />
+            <Text style={styles.sectionTitle}>Statistiques d'Utilisation</Text>
+          </View>
+
+          <View style={styles.statsGrid}>
+            {stats.map((stat, index) => (
+              <View key={index} style={styles.statCard}>
+                <View style={[styles.statIcon, { backgroundColor: stat.color }]}>
+                  <Ionicons name={stat.icon as any} size={24} color="white" />
+                </View>
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="trending-up" size={20} color={BURKINA_COLORS.primary} />
+            <Text style={styles.sectionTitle}>Activité Récente</Text>
+          </View>
+
+          <View style={styles.activityList}>
+            <View style={styles.activityItem}>
+              <Ionicons name="play-circle" size={20} color={BURKINA_COLORS.primary} />
+              <Text style={styles.activityText}>Dernière vidéo regardée: Journal du 6 septembre</Text>
+              <Text style={styles.activityTime}>Il y a 2h</Text>
+            </View>
+            
+            <View style={styles.activityItem}>
+              <Ionicons name="chatbubble" size={20} color={BURKINA_COLORS.secondary} />
+              <Text style={styles.activityText}>Commentaire sur "Check Point de LCA"</Text>
+              <Text style={styles.activityTime}>Il y a 1 jour</Text>
+            </View>
+            
+            <View style={styles.activityItem}>
+              <Ionicons name="heart" size={20} color={BURKINA_COLORS.accent} />
+              <Text style={styles.activityText}>Ajouté "Franc Parler" aux favoris</Text>
+              <Text style={styles.activityTime}>Il y a 3 jours</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderSettingsTab = () => {
+    if (!user) return null;
+
+    const settings = [
+      {
+        icon: 'notifications-outline',
+        title: 'Notifications',
+        subtitle: 'Gérer les notifications push',
+        action: () => console.log('Notifications settings'),
+      },
+      {
+        icon: 'language-outline',
+        title: 'Langue',
+        subtitle: user.preferences.language,
+        action: () => console.log('Language settings'),
+      },
+      {
+        icon: 'shield-checkmark-outline',
+        title: 'Confidentialité',
+        subtitle: 'Paramètres de confidentialité',
+        action: () => console.log('Privacy settings'),
+      },
+      {
+        icon: 'download-outline',
+        title: 'Téléchargements',
+        subtitle: 'Gérer les téléchargements hors-ligne',
+        action: () => console.log('Download settings'),
+      },
+      {
+        icon: 'help-circle-outline',
+        title: 'Aide et Support',
+        subtitle: 'FAQ et contact support',
+        action: () => console.log('Help and support'),
+      },
+      {
+        icon: 'information-circle-outline',
+        title: 'À propos',
+        subtitle: 'Version de l\'application et crédits',
+        action: () => console.log('About'),
+      },
+    ];
+
+    return (
+      <View style={styles.tabContent}>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="settings-outline" size={20} color={BURKINA_COLORS.primary} />
+            <Text style={styles.sectionTitle}>Paramètres</Text>
+          </View>
+
+          <View style={styles.settingsList}>
+            {settings.map((setting, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.settingItem}
+                onPress={setting.action}
+                activeOpacity={0.7}
+              >
+                <View style={styles.settingIcon}>
+                  <Ionicons name={setting.icon as any} size={24} color={BURKINA_COLORS.primary} />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingTitle}>{setting.title}</Text>
+                  <Text style={styles.settingSubtitle}>{setting.subtitle}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#ccc" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.logoutButton}>
+            <Ionicons name="log-out-outline" size={20} color={BURKINA_COLORS.accent} />
+            <Text style={styles.logoutText}>Se Déconnecter</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'info':
+        return renderInfoTab();
+      case 'comments':
+        return renderCommentsTab();
+      case 'stats':
+        return renderStatsTab();
+      case 'settings':
+        return renderSettingsTab();
+      default:
+        return renderInfoTab();
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={BURKINA_COLORS.primary} />
+        <View style={styles.loadingContainer}>
+          <LinearGradient
+            colors={[BURKINA_COLORS.primary, BURKINA_COLORS.secondary]}
+            style={styles.loadingGradient}
+          >
+            <Ionicons name="person" size={60} color="white" />
+            <Text style={styles.loadingText}>Chargement du profil...</Text>
+          </LinearGradient>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
