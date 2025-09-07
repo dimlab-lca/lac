@@ -357,211 +357,304 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BURKINA_COLORS.light,
   },
-  header: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerText: {
+  loadingContainer: {
     flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingGradient: {
+    padding: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    margin: 20,
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
   },
   scrollView: {
     flex: 1,
   },
-  breakingBanner: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 8,
-    overflow: 'hidden',
+  // Hero Video Section
+  heroContainer: {
+    height: height * 0.35,
+    marginBottom: 20,
   },
-  breakingGradient: {
+  heroTouchable: {
+    flex: 1,
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heroGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  heroPlayButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  heroContent: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  heroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  breakingBannerText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  categoryContainer: {
-    paddingVertical: 16,
-  },
-  categoryContent: {
-    paddingHorizontal: 16,
-  },
-  categoryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: BURKINA_COLORS.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: BURKINA_COLORS.white,
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: BURKINA_COLORS.primary,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
   },
-  categoryButtonActive: {
-    backgroundColor: BURKINA_COLORS.primary,
-  },
-  categoryText: {
+  heroBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
     marginLeft: 6,
+  },
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  heroMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  heroMetaText: {
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 14,
     fontWeight: '500',
-    color: BURKINA_COLORS.primary,
   },
-  categoryTextActive: {
-    color: 'white',
-  },
-  articlesSection: {
-    paddingHorizontal: 16,
+  // Replays Section
+  replaysSection: {
+    marginBottom: 30,
   },
   sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
     marginBottom: 16,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: BURKINA_COLORS.dark,
+    marginLeft: 8,
   },
   sectionSubtitle: {
     fontSize: 14,
     color: '#6b7280',
-    marginTop: 2,
   },
-  articleCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  replaysList: {
+    paddingHorizontal: 20,
+  },
+  replayCard: {
+    width: width * 0.7,
     backgroundColor: BURKINA_COLORS.white,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  replayImageContainer: {
+    position: 'relative',
+  },
+  replayImage: {
+    width: '100%',
+    height: 120,
+  },
+  replayDuration: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  replayDurationText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  replayInfo: {
+    padding: 12,
+  },
+  replayTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BURKINA_COLORS.dark,
+    marginBottom: 6,
+    lineHeight: 18,
+  },
+  replayMeta: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  replayTime: {
+    fontSize: 11,
+    color: '#9ca3af',
+  },
+  // Info Section
+  infoSection: {
+    marginHorizontal: 20,
+    backgroundColor: BURKINA_COLORS.white,
+    borderRadius: 16,
+    padding: 20,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    position: 'relative',
+    shadowRadius: 3,
   },
-  breakingBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: BURKINA_COLORS.accent,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    zIndex: 1,
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  breakingText: {
-    color: 'white',
-    fontSize: 10,
+  infoTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-  },
-  articleContent: {
-    flex: 1,
-    marginRight: 12,
-  },
-  articleTitle: {
-    fontSize: 16,
-    fontWeight: '600',
     color: BURKINA_COLORS.dark,
-    lineHeight: 22,
-    marginBottom: 8,
+    marginLeft: 12,
   },
-  articleSummary: {
+  infoContent: {
+    alignItems: 'stretch',
+  },
+  infoDescription: {
     fontSize: 14,
     color: '#6b7280',
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: 20,
   },
-  articleMeta: {
+  infoStats: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  infoStat: {
     alignItems: 'center',
   },
-  categoryBadge: {
-    backgroundColor: BURKINA_COLORS.secondary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  infoStatNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: BURKINA_COLORS.primary,
   },
-  categoryBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: BURKINA_COLORS.dark,
-  },
-  metaInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  metaText: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  metaDot: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginHorizontal: 6,
-  },
-  emergencySection: {
-    marginHorizontal: 16,
-    marginVertical: 24,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  emergencyBlur: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-  },
-  emergencyContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  emergencyText: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  emergencyTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: BURKINA_COLORS.dark,
-  },
-  emergencyDescription: {
+  infoStatLabel: {
     fontSize: 12,
     color: '#6b7280',
-    marginTop: 2,
+    marginTop: 4,
+  },
+  subscribeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: BURKINA_COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+  },
+  subscribeText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  // Video Player Modal
+  videoPlayerModal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  videoPlayerContainer: {
+    width: width * 0.95,
+    maxWidth: 500,
+    backgroundColor: BURKINA_COLORS.white,
+    borderRadius: 16,
+    overflow: 'hidden',
+    maxHeight: height * 0.8,
+  },
+  videoPlayerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: BURKINA_COLORS.primary,
+    padding: 16,
+  },
+  videoPlayerTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    marginRight: 12,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoPlayerContent: {
+    backgroundColor: '#000',
+  },
+  videoPlayerInfo: {
+    padding: 16,
+  },
+  videoPlayerMeta: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  videoPlayerDescription: {
+    fontSize: 14,
+    color: BURKINA_COLORS.dark,
+    lineHeight: 20,
   },
 });
