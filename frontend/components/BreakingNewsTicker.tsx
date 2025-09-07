@@ -35,8 +35,14 @@ const BreakingNewsTicker: React.FC = () => {
 
   useEffect(() => {
     loadTickerData();
-    startScrollAnimation();
   }, []);
+
+  useEffect(() => {
+    if (newsItems.length > 0) {
+      // Démarrer l'animation après que les données soient chargées
+      startScrollAnimation();
+    }
+  }, [newsItems]);
 
   const loadTickerData = async () => {
     try {
@@ -97,22 +103,37 @@ const BreakingNewsTicker: React.FC = () => {
           type: 'weather',
           content: '🌤️ OUAGADOUGOU: Temps clément - Restez informés',
           icon: 'sunny'
+        },
+        {
+          id: 'fallback-3',
+          type: 'market',
+          content: '📈 MARCHÉ: FCFA/USD stable - Marchés ouverts',
+          icon: 'trending-up'
         }
       ]);
     }
   };
 
   const startScrollAnimation = () => {
-    const totalWidth = newsItems.length * 400; // Largeur estimée par item
+    // Reset animation
+    scrollX.setValue(width);
     
-    Animated.loop(
+    const totalWidth = width + (newsItems.length * 500); // Plus d'espace pour chaque item
+    
+    const animate = () => {
       Animated.timing(scrollX, {
         toValue: -totalWidth,
-        duration: newsItems.length * 8000, // 8 secondes par item
-        useNativeDriver: true,
-      }),
-      { iterations: -1 }
-    ).start();
+        duration: newsItems.length * 12000, // Plus lent pour meilleure lisibilité
+        useNativeDriver: false, // Compatibilité web
+      }).start(({ finished }) => {
+        if (finished) {
+          scrollX.setValue(width);
+          animate(); // Recommencer
+        }
+      });
+    };
+    
+    animate();
   };
 
   const renderNewsItem = (item: BreakingNewsItem, index: number) => (
