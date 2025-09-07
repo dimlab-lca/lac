@@ -266,13 +266,32 @@ export default function RootLayout() {
     <Drawer
       drawerContent={CustomDrawerContent}
       screenOptions={{
-        headerShown: false,
         drawerStyle: {
           backgroundColor: 'transparent',
-          width: 300,
         },
-        drawerType: 'front',
-        overlayColor: 'rgba(0, 0, 0, 0.5)',
+        overlayColor: 'rgba(0, 0, 0, 0.7)',
+        drawerType: 'slide',
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: BURKINA_COLORS.primary,
+          height: 90,
+        },
+        headerTintColor: 'white',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+          fontSize: 18,
+        },
+        headerTitle: () => (
+          <View style={styles.headerContainer}>
+            <Image 
+              source={{ uri: 'https://customer-assets.emergentagent.com/job_lcatv-burkina/artifacts/a7zhvpqx_lcall.jpg' }}
+              style={styles.headerLogo}
+              resizeMode="contain"
+            />
+            <Text style={styles.headerTitle}>LCA TV</Text>
+          </View>
+        ),
+        headerTitleAlign: 'left',
       }}
     >
       <Drawer.Screen name="index" />
