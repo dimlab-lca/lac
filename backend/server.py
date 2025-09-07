@@ -21,6 +21,7 @@ import httpx
 import asyncio
 import json
 import logging
+import requests
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
