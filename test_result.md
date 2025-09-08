@@ -105,50 +105,77 @@
 user_problem_statement: TV LCA REDISEIGN: Dashboard de gestion publicitaire complet avec commandes front-end, gestion clients, facturation, statistiques, espaces publicitaires, rôles utilisateurs (Admin/Rédacteur), analytics et système de tracking. Architecture moderne FastAPI + React Web + MongoDB.
 
 backend:
-  - task: "FastAPI Backend Setup with Authentication"
+  - task: "Dashboard Backend API - Admin Users Management"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "main"
-          comment: "Created FastAPI backend with JWT auth, MongoDB integration, user registration/login, campaign CRUD, orders, and ratings. Health check returns healthy status."
-        - working: true
-          agent: "testing"
-          comment: "✅ COMPREHENSIVE TESTING PASSED: Health check (healthy + DB connected), JWT auth (registration/login working), protected routes (proper 401 for unauthorized), user data retrieval working. Authentication system fully functional."
+          comment: "Extended FastAPI backend with admin user management, role-based authentication (admin/editor), JWT auth, MongoDB integration. Added admin users API endpoints with CRUD operations."
 
-  - task: "Campaign Management API"
+  - task: "Client Management System"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "main"
-          comment: "Campaign CRUD endpoints with modalities support (video/text/audio), sample data initialization, rating system."
-        - working: true
-          agent: "testing"
-          comment: "✅ COMPREHENSIVE TESTING PASSED: GET /api/campaigns returns 4 campaigns with proper structure (id, title, description, modalities, budget). POST /api/campaigns creates campaigns successfully. Sample data initialized with video/text/audio modalities. Rating system working (5-star rating submitted successfully)."
+          comment: "Complete client management API with CRUD operations. Sample clients initialized (Orange, Moov, Banque Atlantique). Endpoints: GET/POST/PUT/DELETE /api/admin/clients with tracking of total spent amounts."
 
-  - task: "Order Management API"
+  - task: "Ad Spaces Management System"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "main"
-          comment: "Order creation and retrieval endpoints with cost calculation based on selected modalities."
+          comment: "Ad spaces management with position-based pricing (header, sidebar, footer, video pre-roll). Sample spaces created with dimensions and pricing per day/week/month. CRUD endpoints implemented."
+
+  - task: "Order and Invoice Management"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
         - working: true
-          agent: "testing"
-          comment: "✅ COMPREHENSIVE TESTING PASSED: POST /api/orders creates orders with proper cost calculation ($5000 for video+text modalities). GET /api/orders/my retrieves user orders correctly. Order system fully functional with modality selection and custom messages."
+          agent: "main"
+          comment: "Advertising order system with automatic pricing calculation, duration management, status tracking (pending/active/completed). Invoice generation with tax calculation (18% VAT). Payment status tracking."
+
+  - task: "Dashboard Analytics API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Complete analytics system: dashboard stats (clients, orders, revenue, impressions, clicks), revenue analytics with monthly breakdown, performance analytics with CTR calculations. Working endpoints tested."
+
+  - task: "Public API for Ad Display and Tracking"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Public API endpoints for website integration: /api/public/ads/{position} for ad retrieval, /api/public/ads/{order_id}/click for click tracking. Automatic impression counting implemented."
 
 frontend:
   - task: "Video Playback Functionality"
