@@ -22,6 +22,53 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginCredentials) => {
     setIsLoading(true);
     try {
+      // Check if this is admin access from Flask website
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      
+      if (token === 'admin_authorized') {
+        // Auto-login for admin from Flask
+        const adminUser = {
+          username: 'admin',
+          full_name: 'Administrateur LCA TV',
+          role: 'admin',
+          email: 'admin@lcatv.bf'
+        };
+        
+        localStorage.setItem('auth_token', 'admin_token_2025');
+        localStorage.setItem('user_data', JSON.stringify(adminUser));
+        
+        toast.success('Connexion administrateur réussie !');
+        router.push('/dashboard');
+        return;
+      }
+      
+      // Try Flask authentication first
+      try {
+        const flaskResponse = await fetch('http://localhost:5005/api/auth/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        
+        if (flaskResponse.ok) {
+          const flaskData = await flaskResponse.json();
+          if (flaskData.success) {
+            localStorage.setItem('auth_token', flaskData.token);
+            localStorage.setItem('user_data', JSON.stringify(flaskData.user));
+            
+            toast.success('Connexion réussie !');
+            router.push('/dashboard');
+            return;
+          }
+        }
+      } catch (flaskError) {
+        console.log('Flask auth failed, trying FastAPI...');
+      }
+      
+      // Fallback to FastAPI authentication
       const response = await authApi.login(data);
       
       // Store auth data
