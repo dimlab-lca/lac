@@ -1832,6 +1832,104 @@ async def startup_event():
         ]
         breaking_news_collection.insert_many(sample_news)
     
+    # Initialize dashboard data
+    if admin_users_collection.count_documents({}) == 0:
+        # Create default admin user
+        admin_password = bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        admin_user = {
+            "username": "admin",
+            "email": "admin@lcatv.bf",
+            "password": admin_password,
+            "full_name": "Administrateur LCA TV",
+            "role": "admin",
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+            "last_login": None
+        }
+        admin_users_collection.insert_one(admin_user)
+    
+    # Initialize ad spaces
+    if ad_spaces_collection.count_documents({}) == 0:
+        sample_ad_spaces = [
+            {
+                "name": "Header Banner",
+                "position": "header",
+                "dimensions": {"width": 728, "height": 90},
+                "price_per_day": 25000,
+                "price_per_week": 150000,
+                "price_per_month": 500000,
+                "is_active": True,
+                "created_at": datetime.utcnow()
+            },
+            {
+                "name": "Sidebar Standard",
+                "position": "sidebar",
+                "dimensions": {"width": 300, "height": 250},
+                "price_per_day": 20000,
+                "price_per_week": 120000,
+                "price_per_month": 400000,
+                "is_active": True,
+                "created_at": datetime.utcnow()
+            },
+            {
+                "name": "Footer Banner",
+                "position": "footer",
+                "dimensions": {"width": 970, "height": 90},
+                "price_per_day": 30000,
+                "price_per_week": 180000,
+                "price_per_month": 600000,
+                "is_active": True,
+                "created_at": datetime.utcnow()
+            },
+            {
+                "name": "Video Pre-Roll",
+                "position": "video_preroll",
+                "dimensions": {"width": 640, "height": 360},
+                "price_per_day": 50000,
+                "price_per_week": 300000,
+                "price_per_month": 1000000,
+                "is_active": True,
+                "created_at": datetime.utcnow()
+            }
+        ]
+        ad_spaces_collection.insert_many(sample_ad_spaces)
+    
+    # Initialize sample clients
+    if clients_collection.count_documents({}) == 0:
+        sample_clients = [
+            {
+                "company_name": "Orange Burkina Faso",
+                "contact_person": "Marie Traore",
+                "email": "m.traore@orange.bf",
+                "phone": "+226 70 12 34 56",
+                "address": "Avenue Kwame Nkrumah, Ouagadougou",
+                "created_at": datetime.utcnow(),
+                "is_active": True,
+                "total_spent": 2500000
+            },
+            {
+                "company_name": "Moov Africa Burkina",
+                "contact_person": "Jean Baptiste Kabore",
+                "email": "jb.kabore@moov.bf",
+                "phone": "+226 76 98 76 54",
+                "address": "Avenue Charles de Gaulle, Ouagadougou",
+                "created_at": datetime.utcnow(),
+                "is_active": True,
+                "total_spent": 1800000
+            },
+            {
+                "company_name": "Banque Atlantique",
+                "contact_person": "Fatou Sankara",
+                "email": "f.sankara@banqueatlantique.bf",
+                "phone": "+226 25 31 42 85",
+                "address": "Avenue de la Nation, Ouagadougou",
+                "created_at": datetime.utcnow(),
+                "is_active": True,
+                "total_spent": 3200000
+            }
+        ]
+        clients_collection.insert_many(sample_clients)
+    
     # Start YouTube sync background task
     asyncio.create_task(sync_youtube_videos())
 
