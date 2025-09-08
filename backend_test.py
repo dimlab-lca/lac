@@ -14,17 +14,42 @@ import uuid
 # Backend URL - using localhost as per the configuration
 BACKEND_URL = "http://localhost:8001/api"
 
-class BackendTester:
+class LCATVBackendTester:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.auth_token = None
-        self.test_user_data = {
-            "username": "campaign_tester_2025",
-            "email": "tester@campaignapp.com", 
-            "password": "SecurePass123!",
-            "full_name": "Campaign App Tester"
-        }
         self.test_results = []
+        self.created_client_id = None
+        self.created_ad_space_id = None
+        self.created_order_id = None
+        
+        # Test data for admin user
+        self.test_admin_data = {
+            "username": "testadmin",
+            "email": "test@lcatv.bf",
+            "password": "test123",
+            "full_name": "Test Administrator",
+            "role": "admin"
+        }
+        
+        # Test data for client
+        self.test_client_data = {
+            "company_name": "Test Company Ltd",
+            "contact_person": "John Doe",
+            "email": "john@testcompany.bf",
+            "phone": "+226 70 12 34 56",
+            "address": "123 Test Street, Ouagadougou"
+        }
+        
+        # Test data for ad space
+        self.test_ad_space_data = {
+            "name": "Test Banner Space",
+            "position": "header",
+            "dimensions": {"width": 728, "height": 90},
+            "price_per_day": 5000.0,
+            "price_per_week": 30000.0,
+            "price_per_month": 100000.0
+        }
         
     def log_test(self, test_name, success, details="", response_data=None):
         """Log test results"""
