@@ -156,11 +156,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Advertising order system with automatic pricing calculation, duration management, status tracking (pending/active/completed). Invoice generation with tax calculation (18% VAT). Payment status tracking."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Order management system fully functional. Successfully created test order with automatic price calculation (35,000 FCFA for 7-day campaign). Order status updates working correctly. Invoice generation with 18% VAT confirmed. All CRUD operations and status tracking working perfectly."
 
   - task: "Dashboard Analytics API"
     implemented: true
