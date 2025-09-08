@@ -111,11 +111,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Extended FastAPI backend with admin user management, role-based authentication (admin/editor), JWT auth, MongoDB integration. Added admin users API endpoints with CRUD operations."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTED: Admin user creation and retrieval working perfectly. Created test admin user 'testadmin' successfully. GET /api/admin/users returns 2 admin users. All endpoints responding correctly with proper JSON structure."
 
   - task: "Client Management System"
     implemented: true
