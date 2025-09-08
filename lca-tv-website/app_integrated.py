@@ -19,8 +19,15 @@ import uuid
 from PIL import Image
 import base64
 
-# Importer la configuration et les fonctions de base depuis app_advanced
-from app_advanced import *
+# Importer les modules nécessaires depuis app_advanced
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from app_advanced import (
+    app, db_manager, login_required, log_activity,
+    get_all_settings, create_user, allowed_file
+)
 
 # Override de la route login pour redirection vers Dashboard React
 @app.route('/login', methods=['GET', 'POST'])
