@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Publicity Campaign App
-Tests all backend endpoints with comprehensive coverage
+LCA TV Dashboard Backend API Testing
+Comprehensive testing for the advertising management dashboard system
 """
 
 import requests
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
+import uuid
 
-# Backend URL from environment
-BACKEND_URL = "https://pubcontrol-hub.preview.emergentagent.com/api"
+# Backend URL - using localhost as per the configuration
+BACKEND_URL = "http://localhost:8001/api"
 
 class BackendTester:
     def __init__(self):
