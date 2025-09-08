@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: Build a publicity campaign ordering mobile app with modern UI, user authentication, campaign ordering with modalities (video/text/audio), and content rating/following system
+user_problem_statement: TV LCA REDISEIGN: Dashboard de gestion publicitaire complet avec commandes front-end, gestion clients, facturation, statistiques, espaces publicitaires, rôles utilisateurs (Admin/Rédacteur), analytics et système de tracking. Architecture moderne FastAPI + React Web + MongoDB.
 
 backend:
   - task: "FastAPI Backend Setup with Authentication"
