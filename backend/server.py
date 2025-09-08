@@ -1336,6 +1336,429 @@ async def remove_favorite_show(user_id: str, show_name: str):
         logger.error(f"❌ Erreur lors de la suppression des favoris: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ===== DASHBOARD ADMINISTRATION ROUTES =====
+
+def admin_required(f):
+    """Decorator to require admin role"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # This would be implemented with proper role checking
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Admin User Management
+@app.post("/api/admin/users", response_model=AdminUser)
+async def create_admin_user(user_data: AdminUserCreate):
+    """Create a new admin user"""
+    # Check if username already exists
+    if admin_users_collection.find_one({"username": user_data.username}):
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Check if email already exists
+    if admin_users_collection.find_one({"email": user_data.email}):
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    # Hash password
+    hashed_password = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    admin_user_doc = {
+        "username": user_data.username,
+        "email": user_data.email,
+        "password": hashed_password,
+        "full_name": user_data.full_name,
+        "role": user_data.role,
+        "is_active": True,
+        "created_at": datetime.utcnow(),
+        "last_login": None
+    }
+    
+    result = admin_users_collection.insert_one(admin_user_doc)
+    admin_user_doc["id"] = str(result.inserted_id)
+    admin_user_doc.pop("_id", None)
+    admin_user_doc.pop("password", None)  # Don't return password
+    
+    return AdminUser(**admin_user_doc)
+
+@app.get("/api/admin/users", response_model=List[AdminUser])
+async def get_admin_users():
+    """Get all admin users"""
+    users = list(admin_users_collection.find({}, {"password": 0}))
+    
+    for user in users:
+        user["id"] = str(user.pop("_id"))
+    
+    return [AdminUser(**user) for user in users]
+
+# Client Management
+@app.post("/api/admin/clients", response_model=Client)
+async def create_client(client_data: ClientCreate):
+    """Create a new client"""
+    client_doc = {
+        "company_name": client_data.company_name,
+        "contact_person": client_data.contact_person,
+        "email": client_data.email,
+        "phone": client_data.phone,
+        "address": client_data.address,
+        "created_at": datetime.utcnow(),
+        "is_active": True,
+        "total_spent": 0.0
+    }
+    
+    result = clients_collection.insert_one(client_doc)
+    client_doc["id"] = str(result.inserted_id)
+    client_doc.pop("_id", None)
+    
+    return Client(**client_doc)
+
+@app.get("/api/admin/clients", response_model=List[Client])
+async def get_clients():
+    """Get all clients"""
+    clients = list(clients_collection.find({}))
+    
+    for client in clients:
+        client["id"] = str(client.pop("_id"))
+    
+    return [Client(**client) for client in clients]
+
+@app.get("/api/admin/clients/{client_id}", response_model=Client)
+async def get_client(client_id: str):
+    """Get client by ID"""
+    try:
+        client = clients_collection.find_one({"_id": ObjectId(client_id)})
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        client["id"] = str(client.pop("_id"))
+        return Client(**client)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid client ID")
+
+@app.put("/api/admin/clients/{client_id}", response_model=Client)
+async def update_client(client_id: str, client_data: ClientCreate):
+    """Update client"""
+    try:
+        update_data = {
+            "company_name": client_data.company_name,
+            "contact_person": client_data.contact_person,
+            "email": client_data.email,
+            "phone": client_data.phone,
+            "address": client_data.address,
+            "updated_at": datetime.utcnow()
+        }
+        
+        result = clients_collection.update_one(
+            {"_id": ObjectId(client_id)},
+            {"$set": update_data}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        client = clients_collection.find_one({"_id": ObjectId(client_id)})
+        client["id"] = str(client.pop("_id"))
+        return Client(**client)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid client ID")
+
+@app.delete("/api/admin/clients/{client_id}")
+async def delete_client(client_id: str):
+    """Delete client"""
+    try:
+        result = clients_collection.delete_one({"_id": ObjectId(client_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Client not found")
+        return {"message": "Client deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid client ID")
+
+# Ad Space Management
+@app.post("/api/admin/ad-spaces", response_model=AdSpace)
+async def create_ad_space(ad_space_data: AdSpaceCreate):
+    """Create a new advertising space"""
+    ad_space_doc = {
+        "name": ad_space_data.name,
+        "position": ad_space_data.position,
+        "dimensions": ad_space_data.dimensions,
+        "price_per_day": ad_space_data.price_per_day,
+        "price_per_week": ad_space_data.price_per_week,
+        "price_per_month": ad_space_data.price_per_month,
+        "is_active": True,
+        "created_at": datetime.utcnow()
+    }
+    
+    result = ad_spaces_collection.insert_one(ad_space_doc)
+    ad_space_doc["id"] = str(result.inserted_id)
+    ad_space_doc.pop("_id", None)
+    
+    return AdSpace(**ad_space_doc)
+
+@app.get("/api/admin/ad-spaces", response_model=List[AdSpace])
+async def get_ad_spaces():
+    """Get all advertising spaces"""
+    ad_spaces = list(ad_spaces_collection.find({}))
+    
+    for space in ad_spaces:
+        space["id"] = str(space.pop("_id"))
+    
+    return [AdSpace(**space) for space in ad_spaces]
+
+# Ad Order Management
+@app.post("/api/admin/ad-orders", response_model=AdOrder)
+async def create_ad_order(order_data: AdOrderCreate):
+    """Create a new advertising order"""
+    # Calculate duration and total amount
+    start_date = order_data.start_date
+    end_date = order_data.end_date
+    duration_days = (end_date - start_date).days
+    
+    # Get ad space to calculate price
+    ad_space = ad_spaces_collection.find_one({"_id": ObjectId(order_data.ad_space_id)})
+    if not ad_space:
+        raise HTTPException(status_code=404, detail="Ad space not found")
+    
+    # Calculate total amount based on duration
+    if duration_days <= 7:
+        daily_rate = ad_space["price_per_day"]
+        total_amount = daily_rate * duration_days
+    elif duration_days <= 30:
+        total_amount = ad_space["price_per_week"] * (duration_days / 7)
+    else:
+        total_amount = ad_space["price_per_month"] * (duration_days / 30)
+    
+    order_doc = {
+        "client_id": order_data.client_id,
+        "ad_space_id": order_data.ad_space_id,
+        "content_type": order_data.content_type,
+        "content_url": order_data.content_url,
+        "content_html": order_data.content_html,
+        "start_date": start_date,
+        "end_date": end_date,
+        "duration_days": duration_days,
+        "total_amount": total_amount,
+        "status": "pending",
+        "payment_status": "pending",
+        "created_at": datetime.utcnow(),
+        "impressions": 0,
+        "clicks": 0
+    }
+    
+    result = ad_orders_collection.insert_one(order_doc)
+    order_doc["id"] = str(result.inserted_id)
+    order_doc.pop("_id", None)
+    
+    # Create invoice
+    invoice_doc = {
+        "order_id": str(result.inserted_id),
+        "client_id": order_data.client_id,
+        "invoice_number": f"INV-{datetime.utcnow().strftime('%Y%m%d')}-{result.inserted_id}",
+        "amount": total_amount,
+        "tax_amount": total_amount * 0.18,  # 18% VAT
+        "total_amount": total_amount * 1.18,
+        "issue_date": datetime.utcnow(),
+        "due_date": datetime.utcnow() + timedelta(days=30),
+        "status": "pending",
+        "created_at": datetime.utcnow()
+    }
+    
+    invoices_collection.insert_one(invoice_doc)
+    
+    return AdOrder(**order_doc)
+
+@app.get("/api/admin/ad-orders", response_model=List[AdOrder])
+async def get_ad_orders():
+    """Get all advertising orders"""
+    orders = list(ad_orders_collection.find({}))
+    
+    for order in orders:
+        order["id"] = str(order.pop("_id"))
+    
+    return [AdOrder(**order) for order in orders]
+
+@app.put("/api/admin/ad-orders/{order_id}/status")
+async def update_order_status(order_id: str, status_data: dict):
+    """Update order status"""
+    try:
+        status = status_data.get("status")
+        payment_status = status_data.get("payment_status")
+        
+        update_data = {"updated_at": datetime.utcnow()}
+        if status:
+            update_data["status"] = status
+        if payment_status:
+            update_data["payment_status"] = payment_status
+            if payment_status == "paid":
+                update_data["payment_date"] = datetime.utcnow()
+        
+        result = ad_orders_collection.update_one(
+            {"_id": ObjectId(order_id)},
+            {"$set": update_data}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        return {"message": "Order status updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid order ID")
+
+# Dashboard Statistics
+@app.get("/api/admin/dashboard/stats", response_model=DashboardStats)
+async def get_dashboard_stats():
+    """Get dashboard statistics"""
+    total_clients = clients_collection.count_documents({})
+    active_orders = ad_orders_collection.count_documents({"status": "active"})
+    
+    # Calculate monthly revenue
+    current_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    monthly_orders = list(ad_orders_collection.find({
+        "created_at": {"$gte": current_month},
+        "payment_status": "paid"
+    }))
+    monthly_revenue = sum(order.get("total_amount", 0) for order in monthly_orders)
+    
+    # Calculate total impressions and clicks
+    all_orders = list(ad_orders_collection.find({}))
+    total_impressions = sum(order.get("impressions", 0) for order in all_orders)
+    total_clicks = sum(order.get("clicks", 0) for order in all_orders)
+    
+    # Calculate pending payments
+    pending_payments = sum(
+        order.get("total_amount", 0) for order in 
+        ad_orders_collection.find({"payment_status": "pending"})
+    )
+    
+    return DashboardStats(
+        total_clients=total_clients,
+        active_orders=active_orders,
+        monthly_revenue=monthly_revenue,
+        total_impressions=total_impressions,
+        total_clicks=total_clicks,
+        pending_payments=pending_payments
+    )
+
+# Analytics Routes
+@app.get("/api/admin/analytics/revenue")
+async def get_revenue_analytics():
+    """Get revenue analytics"""
+    # Monthly revenue for the last 12 months
+    monthly_revenue = []
+    for i in range(12):
+        month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30*i)
+        month_end = month_start + timedelta(days=30)
+        
+        orders = list(ad_orders_collection.find({
+            "created_at": {"$gte": month_start, "$lt": month_end},
+            "payment_status": "paid"
+        }))
+        
+        revenue = sum(order.get("total_amount", 0) for order in orders)
+        monthly_revenue.append({
+            "month": month_start.strftime("%B %Y"),
+            "revenue": revenue,
+            "orders_count": len(orders)
+        })
+    
+    monthly_revenue.reverse()  # Show oldest first
+    
+    return {
+        "monthly_revenue": monthly_revenue,
+        "total_revenue": sum(item["revenue"] for item in monthly_revenue),
+        "average_monthly_revenue": sum(item["revenue"] for item in monthly_revenue) / 12,
+        "growth_rate": 15.5  # Mock data - would calculate actual growth
+    }
+
+@app.get("/api/admin/analytics/performance")
+async def get_performance_analytics():
+    """Get advertising performance analytics"""
+    orders = list(ad_orders_collection.find({"status": {"$in": ["active", "completed"]}}))
+    
+    performance_data = []
+    for order in orders:
+        client = clients_collection.find_one({"_id": ObjectId(order["client_id"])})
+        ad_space = ad_spaces_collection.find_one({"_id": ObjectId(order["ad_space_id"])})
+        
+        ctr = (order.get("clicks", 0) / order.get("impressions", 1)) * 100 if order.get("impressions", 0) > 0 else 0
+        
+        performance_data.append({
+            "order_id": str(order["_id"]),
+            "client_name": client.get("company_name", "Unknown") if client else "Unknown",
+            "ad_space_name": ad_space.get("name", "Unknown") if ad_space else "Unknown",
+            "impressions": order.get("impressions", 0),
+            "clicks": order.get("clicks", 0),
+            "ctr": round(ctr, 2),
+            "amount": order.get("total_amount", 0),
+            "status": order.get("status", "unknown")
+        })
+    
+    return {
+        "performance_data": performance_data,
+        "total_impressions": sum(item["impressions"] for item in performance_data),
+        "total_clicks": sum(item["clicks"] for item in performance_data),
+        "average_ctr": sum(item["ctr"] for item in performance_data) / len(performance_data) if performance_data else 0
+    }
+
+# Public API for frontend ad display
+@app.get("/api/public/ads/{position}")
+async def get_ads_for_position(position: str):
+    """Get active ads for a specific position (for website display)"""
+    current_time = datetime.utcnow()
+    
+    # Find active orders for the position
+    pipeline = [
+        {
+            "$lookup": {
+                "from": "ad_spaces",
+                "localField": "ad_space_id",
+                "foreignField": "_id",
+                "as": "ad_space"
+            }
+        },
+        {
+            "$match": {
+                "status": "active",
+                "start_date": {"$lte": current_time},
+                "end_date": {"$gte": current_time},
+                "ad_space.position": position
+            }
+        }
+    ]
+    
+    active_orders = list(ad_orders_collection.aggregate(pipeline))
+    
+    ads = []
+    for order in active_orders:
+        # Increment impressions
+        ad_orders_collection.update_one(
+            {"_id": order["_id"]},
+            {"$inc": {"impressions": 1}}
+        )
+        
+        ads.append({
+            "id": str(order["_id"]),
+            "content_type": order.get("content_type"),
+            "content_url": order.get("content_url"),
+            "content_html": order.get("content_html"),
+            "ad_space": order.get("ad_space", [{}])[0] if order.get("ad_space") else {}
+        })
+    
+    return {"ads": ads}
+
+@app.post("/api/public/ads/{order_id}/click")
+async def record_ad_click(order_id: str):
+    """Record ad click"""
+    try:
+        result = ad_orders_collection.update_one(
+            {"_id": ObjectId(order_id)},
+            {"$inc": {"clicks": 1}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Ad not found")
+        
+        return {"message": "Click recorded"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid ad ID")
+
 # Health Check
 @app.get("/api/health")
 async def health_check():
