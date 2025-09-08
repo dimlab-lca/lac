@@ -4,7 +4,7 @@ LCA TV Burkina Faso - Backend API
 Modern TV channel app with YouTube integration
 """
 
-from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
@@ -20,7 +20,6 @@ from dotenv import load_dotenv
 import uvicorn
 import httpx
 import asyncio
-import json
 import logging
 import requests
 
@@ -571,7 +570,7 @@ async def get_latest_videos(limit: int = 20):
     """Get latest videos from YouTube channel"""
     try:
         response = requests.get(
-            f"https://www.googleapis.com/youtube/v3/search",
+            "https://www.googleapis.com/youtube/v3/search",
             params={
                 "key": YOUTUBE_API_KEY,
                 "channelId": YOUTUBE_CHANNEL_ID,
@@ -594,7 +593,7 @@ async def get_latest_videos(limit: int = 20):
             
             # Get video statistics and duration
             stats_response = requests.get(
-                f"https://www.googleapis.com/youtube/v3/videos",
+                "https://www.googleapis.com/youtube/v3/videos",
                 params={
                     "key": YOUTUBE_API_KEY,
                     "id": video_id,
@@ -631,7 +630,7 @@ async def get_journal_playlist(limit: int = 20):
         playlist_id = "PLk5BkfzB9R2z1LpmM6ZNkSjhJeUCcjcH6"
         
         response = requests.get(
-            f"https://www.googleapis.com/youtube/v3/playlistItems",
+            "https://www.googleapis.com/youtube/v3/playlistItems",
             params={
                 "key": YOUTUBE_API_KEY,
                 "playlistId": playlist_id,
@@ -653,7 +652,7 @@ async def get_journal_playlist(limit: int = 20):
             
             # Get video statistics and duration
             stats_response = requests.get(
-                f"https://www.googleapis.com/youtube/v3/videos",
+                "https://www.googleapis.com/youtube/v3/videos",
                 params={
                     "key": YOUTUBE_API_KEY,
                     "id": video_id,
@@ -1431,7 +1430,7 @@ async def get_client(client_id: str):
         
         client["id"] = str(client.pop("_id"))
         return Client(**client)
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid client ID")
 
 @app.put("/api/admin/clients/{client_id}", response_model=Client)
@@ -1458,7 +1457,7 @@ async def update_client(client_id: str, client_data: ClientCreate):
         client = clients_collection.find_one({"_id": ObjectId(client_id)})
         client["id"] = str(client.pop("_id"))
         return Client(**client)
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid client ID")
 
 @app.delete("/api/admin/clients/{client_id}")
@@ -1469,7 +1468,7 @@ async def delete_client(client_id: str):
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Client not found")
         return {"message": "Client deleted successfully"}
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid client ID")
 
 # Ad Space Management
@@ -1599,7 +1598,7 @@ async def update_order_status(order_id: str, status_data: dict):
             raise HTTPException(status_code=404, detail="Order not found")
         
         return {"message": "Order status updated successfully"}
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid order ID")
 
 # Dashboard Statistics
@@ -1757,7 +1756,7 @@ async def record_ad_click(order_id: str):
             raise HTTPException(status_code=404, detail="Ad not found")
         
         return {"message": "Click recorded"}
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid ad ID")
 
 # Health Check
