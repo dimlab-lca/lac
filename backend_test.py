@@ -117,387 +117,431 @@ class LCATVBackendTester:
         except Exception as e:
             self.log_test("Admin User Creation", False, f"Connection error: {str(e)}")
     
-    def test_user_registration(self):
-        """Test user registration"""
+    def test_get_admin_users(self):
+        """Test getting admin users list"""
         try:
-            response = requests.post(
-                f"{self.base_url}/auth/register",
-                json=self.test_user_data,
-                timeout=10
-            )
+            response = requests.get(f"{self.base_url}/admin/users", timeout=10)
             
             if response.status_code == 200:
-                data = response.json()
-                if "access_token" in data and "token_type" in data:
-                    self.auth_token = data["access_token"]
-                    self.log_test("User Registration", True, 
-                                "User registered successfully with JWT token", 
-                                {"token_type": data["token_type"]})
+                users = response.json()
+                if isinstance(users, list):
+                    self.log_test("Get Admin Users", True, 
+                                f"Retrieved {len(users)} admin users", 
+                                {"count": len(users)})
                 else:
-                    self.log_test("User Registration", False, 
-                                f"Invalid response format: {data}")
-            elif response.status_code == 400:
-                # User might already exist, try login instead
-                self.log_test("User Registration", True, 
-                            "User already exists (expected for repeated tests)")
-                return self.test_user_login()
+                    self.log_test("Get Admin Users", False, 
+                                f"Expected list, got: {type(users)}")
             else:
-                self.log_test("User Registration", False, 
+                self.log_test("Get Admin Users", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_test("User Registration", False, f"Connection error: {str(e)}")
+            self.log_test("Get Admin Users", False, f"Connection error: {str(e)}")
     
-    def test_user_login(self):
-        """Test user login"""
+    def test_client_management(self):
+        """Test client management CRUD operations"""
+        # Test GET clients (should return sample clients)
         try:
-            login_data = {
-                "username": self.test_user_data["username"],
-                "password": self.test_user_data["password"]
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/auth/login",
-                json=login_data,
-                timeout=10
-            )
+            response = requests.get(f"{self.base_url}/admin/clients", timeout=10)
             
             if response.status_code == 200:
-                data = response.json()
-                if "access_token" in data and "token_type" in data:
-                    self.auth_token = data["access_token"]
-                    self.log_test("User Login", True, 
-                                "Login successful with JWT token", 
-                                {"token_type": data["token_type"]})
-                    return True
+                clients = response.json()
+                if isinstance(clients, list):
+                    # Check for sample clients
+                    client_names = [client.get("company_name", "") for client in clients]
+                    expected_clients = ["Orange", "Moov", "Banque Atlantique"]
+                    found_samples = [name for name in expected_clients if any(name in client_name for client_name in client_names)]
+                    
+                    self.log_test("Get Clients", True, 
+                                f"Retrieved {len(clients)} clients, found samples: {found_samples}", 
+                                {"count": len(clients), "samples": found_samples})
                 else:
-                    self.log_test("User Login", False, 
-                                f"Invalid response format: {data}")
+                    self.log_test("Get Clients", False, 
+                                f"Expected list, got: {type(clients)}")
             else:
-                self.log_test("User Login", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                return False
-                
-        except Exception as e:
-            self.log_test("User Login", False, f"Connection error: {str(e)}")
-            return False
-    
-    def test_protected_route_auth_me(self):
-        """Test protected route - get current user"""
-        if not self.auth_token:
-            self.log_test("Protected Route /auth/me", False, "No auth token available")
-            return
-            
-        try:
-            headers = {"Authorization": f"Bearer {self.auth_token}"}
-            response = requests.get(f"{self.base_url}/auth/me", headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                user_data = response.json()
-                required_fields = ["id", "username", "email", "full_name"]
-                missing_fields = [field for field in required_fields if field not in user_data]
-                
-                if not missing_fields:
-                    self.log_test("Protected Route /auth/me", True, 
-                                f"User data retrieved: {user_data['username']}", user_data)
-                else:
-                    self.log_test("Protected Route /auth/me", False, 
-                                f"Missing fields: {missing_fields}")
-            else:
-                self.log_test("Protected Route /auth/me", False, 
+                self.log_test("Get Clients", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_test("Protected Route /auth/me", False, f"Connection error: {str(e)}")
-    
-    def test_protected_route_without_auth(self):
-        """Test that protected routes require authentication"""
-        try:
-            response = requests.get(f"{self.base_url}/auth/me", timeout=10)
-            
-            if response.status_code == 401 or response.status_code == 403:
-                self.log_test("Protected Route Security", True, 
-                            "Protected route correctly requires authentication")
-            else:
-                self.log_test("Protected Route Security", False, 
-                            f"Expected 401/403, got {response.status_code}")
-                
-        except Exception as e:
-            self.log_test("Protected Route Security", False, f"Connection error: {str(e)}")
-    
-    def test_campaign_creation(self):
-        """Test campaign creation (protected)"""
-        if not self.auth_token:
-            self.log_test("Campaign Creation", False, "No auth token available")
-            return None
-            
-        try:
-            headers = {"Authorization": f"Bearer {self.auth_token}"}
-            campaign_data = {
-                "title": "Test Marketing Campaign 2025",
-                "description": "A comprehensive test campaign for our new product launch",
-                "modalities": ["video", "text", "audio"],
-                "budget": 7500.0,
-                "duration_days": 30,
-                "target_audience": "Tech enthusiasts and early adopters, 25-45 years"
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/campaigns",
-                json=campaign_data,
-                headers=headers,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                campaign = response.json()
-                if "id" in campaign and campaign["title"] == campaign_data["title"]:
-                    self.log_test("Campaign Creation", True, 
-                                f"Campaign created: {campaign['title']}", 
-                                {"id": campaign["id"], "modalities": campaign["modalities"]})
-                    return campaign["id"]
-                else:
-                    self.log_test("Campaign Creation", False, 
-                                f"Invalid response format: {campaign}")
-            else:
-                self.log_test("Campaign Creation", False, 
-                            f"HTTP {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_test("Campaign Creation", False, f"Connection error: {str(e)}")
+            self.log_test("Get Clients", False, f"Connection error: {str(e)}")
         
-        return None
-    
-    def test_order_creation(self, campaign_id=None):
-        """Test order creation (protected)"""
-        if not self.auth_token:
-            self.log_test("Order Creation", False, "No auth token available")
-            return
+        # Test POST client (create new client)
+        try:
+            response = requests.post(
+                f"{self.base_url}/admin/clients",
+                json=self.test_client_data,
+                timeout=10
+            )
             
-        # Get a campaign ID if not provided
-        if not campaign_id:
+            if response.status_code == 200:
+                client = response.json()
+                if "id" in client and client["company_name"] == self.test_client_data["company_name"]:
+                    self.created_client_id = client["id"]
+                    self.log_test("Create Client", True, 
+                                f"Client created: {client['company_name']}", client)
+                else:
+                    self.log_test("Create Client", False, 
+                                f"Invalid response format: {client}")
+            else:
+                self.log_test("Create Client", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Create Client", False, f"Connection error: {str(e)}")
+        
+        # Test PUT client (update client) if we created one
+        if self.created_client_id:
             try:
-                response = requests.get(f"{self.base_url}/campaigns", timeout=10)
+                updated_data = self.test_client_data.copy()
+                updated_data["company_name"] = "Updated Test Company Ltd"
+                
+                response = requests.put(
+                    f"{self.base_url}/admin/clients/{self.created_client_id}",
+                    json=updated_data,
+                    timeout=10
+                )
+                
                 if response.status_code == 200:
-                    campaigns = response.json()
-                    if campaigns:
-                        campaign_id = campaigns[0]["id"]
+                    client = response.json()
+                    if client["company_name"] == updated_data["company_name"]:
+                        self.log_test("Update Client", True, 
+                                    f"Client updated: {client['company_name']}")
                     else:
-                        self.log_test("Order Creation", False, "No campaigns available for testing")
-                        return
+                        self.log_test("Update Client", False, 
+                                    f"Update failed: {client}")
                 else:
-                    self.log_test("Order Creation", False, "Could not fetch campaigns for order test")
-                    return
+                    self.log_test("Update Client", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+                    
             except Exception as e:
-                self.log_test("Order Creation", False, f"Error fetching campaigns: {str(e)}")
-                return
-        
+                self.log_test("Update Client", False, f"Connection error: {str(e)}")
+    
+    def test_ad_spaces_management(self):
+        """Test ad spaces management"""
+        # Test GET ad spaces (should return sample ad spaces)
         try:
-            headers = {"Authorization": f"Bearer {self.auth_token}"}
-            order_data = {
-                "campaign_id": campaign_id,
-                "selected_modalities": ["video", "text"],
-                "custom_message": "Please focus on our premium product line and target tech professionals"
-            }
+            response = requests.get(f"{self.base_url}/admin/ad-spaces", timeout=10)
             
+            if response.status_code == 200:
+                ad_spaces = response.json()
+                if isinstance(ad_spaces, list):
+                    # Check for sample ad spaces
+                    space_names = [space.get("name", "") for space in ad_spaces]
+                    expected_spaces = ["Header Banner", "Sidebar", "Footer", "Video Pre-Roll"]
+                    found_samples = [name for name in expected_spaces if any(name in space_name for space_name in space_names)]
+                    
+                    self.log_test("Get Ad Spaces", True, 
+                                f"Retrieved {len(ad_spaces)} ad spaces, found samples: {found_samples}", 
+                                {"count": len(ad_spaces), "samples": found_samples})
+                else:
+                    self.log_test("Get Ad Spaces", False, 
+                                f"Expected list, got: {type(ad_spaces)}")
+            else:
+                self.log_test("Get Ad Spaces", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Get Ad Spaces", False, f"Connection error: {str(e)}")
+        
+        # Test POST ad space (create new ad space)
+        try:
             response = requests.post(
-                f"{self.base_url}/orders",
-                json=order_data,
-                headers=headers,
+                f"{self.base_url}/admin/ad-spaces",
+                json=self.test_ad_space_data,
                 timeout=10
             )
             
             if response.status_code == 200:
-                order = response.json()
-                required_fields = ["id", "campaign_id", "selected_modalities", "total_cost"]
-                missing_fields = [field for field in required_fields if field not in order]
-                
-                if not missing_fields:
-                    self.log_test("Order Creation", True, 
-                                f"Order created with cost: ${order['total_cost']}", 
-                                {"id": order["id"], "modalities": order["selected_modalities"]})
+                ad_space = response.json()
+                if "id" in ad_space and ad_space["name"] == self.test_ad_space_data["name"]:
+                    self.created_ad_space_id = ad_space["id"]
+                    self.log_test("Create Ad Space", True, 
+                                f"Ad space created: {ad_space['name']}", ad_space)
                 else:
-                    self.log_test("Order Creation", False, 
-                                f"Missing fields: {missing_fields}")
+                    self.log_test("Create Ad Space", False, 
+                                f"Invalid response format: {ad_space}")
             else:
-                self.log_test("Order Creation", False, 
+                self.log_test("Create Ad Space", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_test("Order Creation", False, f"Connection error: {str(e)}")
+            self.log_test("Create Ad Space", False, f"Connection error: {str(e)}")
     
-    def test_get_my_orders(self):
-        """Test getting user's orders (protected)"""
-        if not self.auth_token:
-            self.log_test("Get My Orders", False, "No auth token available")
-            return
-            
+    def test_order_management(self):
+        """Test order management system"""
+        # Test GET orders
         try:
-            headers = {"Authorization": f"Bearer {self.auth_token}"}
-            response = requests.get(f"{self.base_url}/orders/my", headers=headers, timeout=10)
+            response = requests.get(f"{self.base_url}/admin/ad-orders", timeout=10)
             
             if response.status_code == 200:
                 orders = response.json()
                 if isinstance(orders, list):
-                    self.log_test("Get My Orders", True, 
+                    self.log_test("Get Orders", True, 
                                 f"Retrieved {len(orders)} orders", 
                                 {"count": len(orders)})
                 else:
-                    self.log_test("Get My Orders", False, 
+                    self.log_test("Get Orders", False, 
                                 f"Expected list, got: {type(orders)}")
             else:
-                self.log_test("Get My Orders", False, 
+                self.log_test("Get Orders", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_test("Get My Orders", False, f"Connection error: {str(e)}")
-    
-    def test_rating_system(self, campaign_id=None):
-        """Test campaign rating system (protected)"""
-        if not self.auth_token:
-            self.log_test("Rating System", False, "No auth token available")
-            return
-            
-        # Get a campaign ID if not provided
-        if not campaign_id:
-            try:
-                response = requests.get(f"{self.base_url}/campaigns", timeout=10)
-                if response.status_code == 200:
-                    campaigns = response.json()
-                    if campaigns:
-                        campaign_id = campaigns[0]["id"]
-                    else:
-                        self.log_test("Rating System", False, "No campaigns available for rating")
-                        return
-                else:
-                    self.log_test("Rating System", False, "Could not fetch campaigns for rating test")
-                    return
-            except Exception as e:
-                self.log_test("Rating System", False, f"Error fetching campaigns: {str(e)}")
-                return
+            self.log_test("Get Orders", False, f"Connection error: {str(e)}")
         
+        # Test POST order (create new order) if we have client and ad space
+        if self.created_client_id and self.created_ad_space_id:
+            try:
+                order_data = {
+                    "client_id": self.created_client_id,
+                    "ad_space_id": self.created_ad_space_id,
+                    "content_type": "image",
+                    "content_url": "https://example.com/test-ad.jpg",
+                    "start_date": datetime.now().isoformat(),
+                    "end_date": (datetime.now() + timedelta(days=7)).isoformat()
+                }
+                
+                response = requests.post(
+                    f"{self.base_url}/admin/ad-orders",
+                    json=order_data,
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    order = response.json()
+                    if "id" in order and "total_amount" in order:
+                        self.created_order_id = order["id"]
+                        self.log_test("Create Order", True, 
+                                    f"Order created with amount: {order['total_amount']}", order)
+                    else:
+                        self.log_test("Create Order", False, 
+                                    f"Invalid response format: {order}")
+                else:
+                    self.log_test("Create Order", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+                    
+            except Exception as e:
+                self.log_test("Create Order", False, f"Connection error: {str(e)}")
+        
+        # Test PUT order status update if we created an order
+        if self.created_order_id:
+            try:
+                status_data = {
+                    "status": "active",
+                    "payment_status": "paid"
+                }
+                
+                response = requests.put(
+                    f"{self.base_url}/admin/ad-orders/{self.created_order_id}/status",
+                    json=status_data,
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    self.log_test("Update Order Status", True, 
+                                f"Order status updated: {result.get('message', 'Success')}")
+                else:
+                    self.log_test("Update Order Status", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+                    
+            except Exception as e:
+                self.log_test("Update Order Status", False, f"Connection error: {str(e)}")
+    
+    def test_dashboard_analytics(self):
+        """Test dashboard analytics endpoints"""
+        # Test dashboard stats
         try:
-            headers = {"Authorization": f"Bearer {self.auth_token}"}
-            rating_data = {
-                "campaign_id": campaign_id,
-                "rating": 5,
-                "comment": "Excellent campaign with great results and professional execution!"
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/ratings",
-                json=rating_data,
-                headers=headers,
-                timeout=10
-            )
+            response = requests.get(f"{self.base_url}/admin/dashboard/stats", timeout=10)
             
             if response.status_code == 200:
-                result = response.json()
-                if "message" in result:
-                    self.log_test("Rating System", True, 
-                                f"Rating submitted: {result['message']}", result)
+                stats = response.json()
+                required_fields = ["total_clients", "active_orders", "monthly_revenue", 
+                                 "total_impressions", "total_clicks", "pending_payments"]
+                missing_fields = [field for field in required_fields if field not in stats]
+                
+                if not missing_fields:
+                    self.log_test("Dashboard Stats", True, 
+                                f"Stats retrieved: {stats['total_clients']} clients, "
+                                f"{stats['active_orders']} active orders", stats)
                 else:
-                    self.log_test("Rating System", False, 
-                                f"Unexpected response format: {result}")
+                    self.log_test("Dashboard Stats", False, 
+                                f"Missing fields: {missing_fields}")
             else:
-                self.log_test("Rating System", False, 
+                self.log_test("Dashboard Stats", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_test("Rating System", False, f"Connection error: {str(e)}")
-    
-    def test_cors_headers(self):
-        """Test CORS headers for mobile app access"""
+            self.log_test("Dashboard Stats", False, f"Connection error: {str(e)}")
+        
+        # Test revenue analytics
         try:
-            response = requests.options(f"{self.base_url}/health", timeout=10)
+            response = requests.get(f"{self.base_url}/admin/analytics/revenue", timeout=10)
             
-            cors_headers = {
-                "Access-Control-Allow-Origin": response.headers.get("Access-Control-Allow-Origin"),
-                "Access-Control-Allow-Methods": response.headers.get("Access-Control-Allow-Methods"),
-                "Access-Control-Allow-Headers": response.headers.get("Access-Control-Allow-Headers")
-            }
-            
-            if cors_headers["Access-Control-Allow-Origin"]:
-                self.log_test("CORS Headers", True, 
-                            "CORS headers present for mobile access", cors_headers)
-            else:
-                # Try a regular GET request to check CORS
-                response = requests.get(f"{self.base_url}/health", timeout=10)
-                cors_origin = response.headers.get("Access-Control-Allow-Origin")
-                if cors_origin:
-                    self.log_test("CORS Headers", True, 
-                                f"CORS enabled with origin: {cors_origin}")
+            if response.status_code == 200:
+                revenue_data = response.json()
+                if "monthly_revenue" in revenue_data and "total_revenue" in revenue_data:
+                    self.log_test("Revenue Analytics", True, 
+                                f"Revenue data retrieved: Total {revenue_data['total_revenue']}", 
+                                revenue_data)
                 else:
-                    self.log_test("CORS Headers", False, "No CORS headers found")
+                    self.log_test("Revenue Analytics", False, 
+                                f"Invalid response format: {revenue_data}")
+            else:
+                self.log_test("Revenue Analytics", False, 
+                            f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_test("CORS Headers", False, f"Connection error: {str(e)}")
+            self.log_test("Revenue Analytics", False, f"Connection error: {str(e)}")
+        
+        # Test performance analytics
+        try:
+            response = requests.get(f"{self.base_url}/admin/analytics/performance", timeout=10)
+            
+            if response.status_code == 200:
+                performance_data = response.json()
+                if "performance_data" in performance_data and "total_impressions" in performance_data:
+                    self.log_test("Performance Analytics", True, 
+                                f"Performance data retrieved: {performance_data['total_impressions']} impressions", 
+                                performance_data)
+                else:
+                    self.log_test("Performance Analytics", False, 
+                                f"Invalid response format: {performance_data}")
+            else:
+                self.log_test("Performance Analytics", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Performance Analytics", False, f"Connection error: {str(e)}")
+    
+    def test_public_api(self):
+        """Test public API for ad display and tracking"""
+        # Test get ads for position
+        positions = ["header", "sidebar", "footer", "video"]
+        
+        for position in positions:
+            try:
+                response = requests.get(f"{self.base_url}/public/ads/{position}", timeout=10)
+                
+                if response.status_code == 200:
+                    ads_data = response.json()
+                    if "ads" in ads_data and isinstance(ads_data["ads"], list):
+                        self.log_test(f"Public API - Get Ads ({position})", True, 
+                                    f"Retrieved {len(ads_data['ads'])} ads for {position}", 
+                                    {"position": position, "count": len(ads_data["ads"])})
+                    else:
+                        self.log_test(f"Public API - Get Ads ({position})", False, 
+                                    f"Invalid response format: {ads_data}")
+                else:
+                    self.log_test(f"Public API - Get Ads ({position})", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+                    
+            except Exception as e:
+                self.log_test(f"Public API - Get Ads ({position})", False, f"Connection error: {str(e)}")
+        
+        # Test ad click recording if we have an order
+        if self.created_order_id:
+            try:
+                response = requests.post(f"{self.base_url}/public/ads/{self.created_order_id}/click", timeout=10)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    self.log_test("Public API - Record Click", True, 
+                                f"Click recorded: {result.get('message', 'Success')}")
+                else:
+                    self.log_test("Public API - Record Click", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+                    
+            except Exception as e:
+                self.log_test("Public API - Record Click", False, f"Connection error: {str(e)}")
     
     def test_error_handling(self):
         """Test API error handling"""
+        # Test invalid endpoint
         try:
-            # Test invalid endpoint
             response = requests.get(f"{self.base_url}/invalid-endpoint", timeout=10)
             if response.status_code == 404:
                 self.log_test("Error Handling - 404", True, "Invalid endpoint returns 404")
             else:
                 self.log_test("Error Handling - 404", False, 
                             f"Expected 404, got {response.status_code}")
-            
-            # Test invalid JSON
-            response = requests.post(
-                f"{self.base_url}/auth/login",
-                data="invalid json",
-                headers={"Content-Type": "application/json"},
-                timeout=10
-            )
-            if response.status_code in [400, 422]:
-                self.log_test("Error Handling - Invalid JSON", True, 
-                            "Invalid JSON returns appropriate error")
-            else:
-                self.log_test("Error Handling - Invalid JSON", False, 
-                            f"Expected 400/422, got {response.status_code}")
-                
         except Exception as e:
-            self.log_test("Error Handling", False, f"Connection error: {str(e)}")
+            self.log_test("Error Handling - 404", False, f"Connection error: {str(e)}")
+        
+        # Test invalid client ID
+        try:
+            response = requests.get(f"{self.base_url}/admin/clients/invalid-id", timeout=10)
+            if response.status_code in [400, 404]:
+                self.log_test("Error Handling - Invalid ID", True, 
+                            "Invalid ID returns appropriate error")
+            else:
+                self.log_test("Error Handling - Invalid ID", False, 
+                            f"Expected 400/404, got {response.status_code}")
+        except Exception as e:
+            self.log_test("Error Handling - Invalid ID", False, f"Connection error: {str(e)}")
+    
+    def cleanup_test_data(self):
+        """Clean up test data created during testing"""
+        # Delete test client
+        if self.created_client_id:
+            try:
+                response = requests.delete(f"{self.base_url}/admin/clients/{self.created_client_id}", timeout=10)
+                if response.status_code == 200:
+                    self.log_test("Cleanup - Delete Client", True, "Test client deleted")
+            except:
+                pass
     
     def run_all_tests(self):
         """Run comprehensive backend API tests"""
-        print(f"\n🚀 Starting Backend API Tests for: {self.base_url}")
-        print("=" * 60)
+        print(f"\n🚀 Starting LCA TV Dashboard Backend API Tests")
+        print(f"Backend URL: {self.base_url}")
+        print("=" * 70)
         
-        # Basic connectivity and health
+        # 1. Health Check & Database Connection
+        print("\n📋 1. HEALTH CHECK & DATABASE CONNECTION")
         self.test_health_check()
-        self.test_cors_headers()
         
-        # Public endpoints
-        self.test_campaigns_public()
+        # 2. Admin User Management
+        print("\n👥 2. ADMIN USER MANAGEMENT")
+        self.test_admin_user_creation()
+        self.test_get_admin_users()
         
-        # Authentication flow
-        self.test_protected_route_without_auth()
-        self.test_user_registration()
-        if not self.auth_token:
-            self.test_user_login()
+        # 3. Client Management System
+        print("\n🏢 3. CLIENT MANAGEMENT SYSTEM")
+        self.test_client_management()
         
-        # Protected endpoints (require authentication)
-        if self.auth_token:
-            self.test_protected_route_auth_me()
-            campaign_id = self.test_campaign_creation()
-            self.test_order_creation(campaign_id)
-            self.test_get_my_orders()
-            self.test_rating_system(campaign_id)
+        # 4. Ad Spaces Management
+        print("\n📺 4. AD SPACES MANAGEMENT")
+        self.test_ad_spaces_management()
         
-        # Error handling
+        # 5. Order Management System
+        print("\n📋 5. ORDER MANAGEMENT SYSTEM")
+        self.test_order_management()
+        
+        # 6. Dashboard Analytics
+        print("\n📊 6. DASHBOARD ANALYTICS")
+        self.test_dashboard_analytics()
+        
+        # 7. Public API for Ad Display
+        print("\n🌐 7. PUBLIC API FOR AD DISPLAY")
+        self.test_public_api()
+        
+        # 8. Error Handling
+        print("\n⚠️  8. ERROR HANDLING")
         self.test_error_handling()
+        
+        # Cleanup
+        print("\n🧹 9. CLEANUP")
+        self.cleanup_test_data()
         
         # Summary
         self.print_summary()
     
     def print_summary(self):
         """Print test summary"""
-        print("\n" + "=" * 60)
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
+        print("\n" + "=" * 70)
+        print("📊 LCA TV DASHBOARD BACKEND TEST SUMMARY")
+        print("=" * 70)
         
         passed = sum(1 for result in self.test_results if result["success"])
         total = len(self.test_results)
@@ -515,8 +559,8 @@ class LCATVBackendTester:
         
         print("\n✅ CRITICAL ENDPOINTS STATUS:")
         critical_tests = [
-            "Health Check", "Campaigns API", "User Registration", 
-            "User Login", "Protected Route /auth/me"
+            "Health Check", "Get Admin Users", "Get Clients", 
+            "Get Ad Spaces", "Get Orders", "Dashboard Stats"
         ]
         
         for test_name in critical_tests:
@@ -524,7 +568,19 @@ class LCATVBackendTester:
             if result:
                 status = "✅" if result["success"] else "❌"
                 print(f"  {status} {test_name}")
+        
+        # Sample data verification
+        print("\n📋 SAMPLE DATA VERIFICATION:")
+        client_result = next((r for r in self.test_results if r["test"] == "Get Clients"), None)
+        if client_result and client_result["success"]:
+            samples = client_result.get("response_data", {}).get("samples", [])
+            print(f"  📊 Sample Clients Found: {samples}")
+        
+        space_result = next((r for r in self.test_results if r["test"] == "Get Ad Spaces"), None)
+        if space_result and space_result["success"]:
+            samples = space_result.get("response_data", {}).get("samples", [])
+            print(f"  📺 Sample Ad Spaces Found: {samples}")
 
 if __name__ == "__main__":
-    tester = BackendTester()
+    tester = LCATVBackendTester()
     tester.run_all_tests()
