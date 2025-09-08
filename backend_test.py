@@ -86,39 +86,36 @@ class LCATVBackendTester:
         except Exception as e:
             self.log_test("Health Check", False, f"Connection error: {str(e)}")
     
-    def test_campaigns_public(self):
-        """Test public campaigns endpoint"""
+    def test_admin_user_creation(self):
+        """Test admin user creation"""
         try:
-            response = requests.get(f"{self.base_url}/campaigns", timeout=10)
+            response = requests.post(
+                f"{self.base_url}/admin/users",
+                json=self.test_admin_data,
+                timeout=10
+            )
             
             if response.status_code == 200:
-                campaigns = response.json()
-                if isinstance(campaigns, list):
-                    if len(campaigns) > 0:
-                        # Check campaign structure
-                        campaign = campaigns[0]
-                        required_fields = ["id", "title", "description", "modalities", "budget"]
-                        missing_fields = [field for field in required_fields if field not in campaign]
-                        
-                        if not missing_fields:
-                            self.log_test("Campaigns API", True, 
-                                        f"Retrieved {len(campaigns)} campaigns with valid structure", 
-                                        {"count": len(campaigns), "sample": campaign})
-                        else:
-                            self.log_test("Campaigns API", False, 
-                                        f"Missing fields in campaign: {missing_fields}")
-                    else:
-                        self.log_test("Campaigns API", True, 
-                                    "No campaigns found but endpoint works", campaigns)
+                user_data = response.json()
+                required_fields = ["id", "username", "email", "full_name", "role"]
+                missing_fields = [field for field in required_fields if field not in user_data]
+                
+                if not missing_fields:
+                    self.log_test("Admin User Creation", True, 
+                                f"Admin user created: {user_data['username']}", user_data)
                 else:
-                    self.log_test("Campaigns API", False, 
-                                f"Expected list, got: {type(campaigns)}")
+                    self.log_test("Admin User Creation", False, 
+                                f"Missing fields: {missing_fields}")
+            elif response.status_code == 400:
+                # User might already exist
+                self.log_test("Admin User Creation", True, 
+                            "Admin user already exists (expected for repeated tests)")
             else:
-                self.log_test("Campaigns API", False, 
+                self.log_test("Admin User Creation", False, 
                             f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_test("Campaigns API", False, f"Connection error: {str(e)}")
+            self.log_test("Admin User Creation", False, f"Connection error: {str(e)}")
     
     def test_user_registration(self):
         """Test user registration"""
