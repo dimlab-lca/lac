@@ -516,8 +516,46 @@ def get_fallback_videos():
 
 @app.get("/api/videos/latest")
 async def get_latest_videos(limit: int = 20):
-    """Get latest videos from YouTube channel"""
+    """Get latest videos from YouTube channel using RSS feed (no API key required)"""
     try:
+        # Try YouTube RSS feed first (no API key required)
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YOUTUBE_CHANNEL_ID}"
+        rss_response = requests.get(rss_url)
+        
+        if rss_response.status_code == 200:
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(rss_response.content)
+            
+            videos = []
+            entries = root.findall('.//{http://www.w3.org/2005/Atom}entry')
+            
+            for entry in entries[:limit]:
+                video_id = entry.find('.//{http://www.youtube.com/xml/schemas/2015}videoId').text
+                title = entry.find('.//{http://www.w3.org/2005/Atom}title').text
+                description = entry.find('.//{http://www.w3.org/2005/Atom}content').text if entry.find('.//{http://www.w3.org/2005/Atom}content') is not None else ""
+                published = entry.find('.//{http://www.w3.org/2005/Atom}published').text
+                
+                # Generate thumbnail URL
+                thumbnail = f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
+                
+                video = {
+                    "id": video_id,
+                    "title": title,
+                    "description": description[:200] + "..." if len(description) > 200 else description,
+                    "thumbnail": thumbnail,
+                    "published_at": published,
+                    "view_count": "0",  # RSS doesn't provide view count
+                    "like_count": "0",  # RSS doesn't provide like count
+                    "duration": "PT0S",  # RSS doesn't provide duration
+                    "category": "lca_tv"
+                }
+                videos.append(video)
+            
+            if videos:
+                logger.info(f"✅ Loaded {len(videos)} videos from YouTube RSS feed")
+                return videos
+        
+        # Fallback to API method if RSS fails
         response = requests.get(
             f"https://www.googleapis.com/youtube/v3/search",
             params={
@@ -530,47 +568,49 @@ async def get_latest_videos(limit: int = 20):
             }
         )
         
-        if response.status_code != 200:
-            logger.error(f"YouTube API error: {response.status_code}, using fallback data")
-            return get_fallback_videos()[:limit]
-        
-        data = response.json()
-        videos = []
-        
-        for item in data.get("items", []):
-            video_id = item["id"]["videoId"]
+        if response.status_code == 200:
+            data = response.json()
+            videos = []
             
-            # Get video statistics and duration
-            stats_response = requests.get(
-                f"https://www.googleapis.com/youtube/v3/videos",
-                params={
-                    "key": YOUTUBE_API_KEY,
+            for item in data.get("items", []):
+                video_id = item["id"]["videoId"]
+                
+                # Get video statistics and duration
+                stats_response = requests.get(
+                    f"https://www.googleapis.com/youtube/v3/videos",
+                    params={
+                        "key": YOUTUBE_API_KEY,
+                        "id": video_id,
+                        "part": "statistics,contentDetails"
+                    }
+                )
+                
+                stats_data = stats_response.json().get("items", [{}])[0] if stats_response.status_code == 200 else {}
+                
+                video = {
                     "id": video_id,
-                    "part": "statistics,contentDetails"
+                    "title": item["snippet"]["title"],
+                    "description": item["snippet"]["description"],
+                    "thumbnail": item["snippet"]["thumbnails"]["medium"]["url"],
+                    "published_at": item["snippet"]["publishedAt"],
+                    "view_count": stats_data.get("statistics", {}).get("viewCount", "0"),
+                    "like_count": stats_data.get("statistics", {}).get("likeCount", "0"),
+                    "duration": stats_data.get("contentDetails", {}).get("duration", "PT0S"),
+                    "category": "lca_tv"
                 }
-            )
+                videos.append(video)
             
-            stats_data = stats_response.json().get("items", [{}])[0] if stats_response.status_code == 200 else {}
-            
-            video = {
-                "id": video_id,
-                "title": item["snippet"]["title"],
-                "description": item["snippet"]["description"],
-                "thumbnail": item["snippet"]["thumbnails"]["medium"]["url"],
-                "published_at": item["snippet"]["publishedAt"],
-                "view_count": stats_data.get("statistics", {}).get("viewCount", "0"),
-                "like_count": stats_data.get("statistics", {}).get("likeCount", "0"),
-                "duration": stats_data.get("contentDetails", {}).get("duration", "PT0S"),
-                "category": "general"
-            }
-            videos.append(video)
-        
-        logger.info(f"✅ Synced {len(videos)} videos from YouTube")
-        return videos
+            logger.info(f"✅ Synced {len(videos)} videos from YouTube API")
+            return videos
+        else:
+            logger.error(f"YouTube API error: {response.status_code}")
         
     except Exception as e:
-        logger.error(f"Error fetching YouTube videos: {str(e)}, using fallback data")
-        return get_fallback_videos()[:limit]
+        logger.error(f"Error fetching YouTube videos: {str(e)}")
+    
+    # Final fallback to test data
+    logger.info("Using fallback test data")
+    return get_fallback_videos()[:limit]
 
 @app.get("/api/journal/playlist")
 async def get_journal_playlist(limit: int = 20):
