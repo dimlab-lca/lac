@@ -264,11 +264,6 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "Dashboard Backend API - Admin Users Management"
-    - "Client Management System"
-    - "Ad Spaces Management System"
-    - "Order and Invoice Management"
-    - "Dashboard Analytics API"
     - "Dashboard Web Application (Next.js)"
     - "Authentication System Frontend"
   stuck_tasks: []
