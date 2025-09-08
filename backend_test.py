@@ -71,9 +71,11 @@ class LCATVBackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get("status") == "healthy" and "database" in data:
+                if (data.get("status") == "healthy" and 
+                    "services" in data and 
+                    "database" in data["services"]):
                     self.log_test("Health Check", True, 
-                                f"Status: {data['status']}, DB: {data['database']}", data)
+                                f"Status: {data['status']}, DB: {data['services']['database']}", data)
                 else:
                     self.log_test("Health Check", False, 
                                 f"Invalid response format: {data}")
