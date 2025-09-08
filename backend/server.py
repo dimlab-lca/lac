@@ -57,6 +57,14 @@ breaking_news_collection = db.breaking_news
 subscriptions_collection = db.subscriptions
 comments_collection = db.comments
 
+# Dashboard Collections
+ad_spaces_collection = db.ad_spaces
+ad_orders_collection = db.ad_orders
+clients_collection = db.clients
+invoices_collection = db.invoices
+analytics_collection = db.analytics
+admin_users_collection = db.admin_users
+
 # Configuration
 SECRET_KEY = os.getenv("JWT_SECRET", "lcatv-secret-key-2025")
 ALGORITHM = "HS256"
