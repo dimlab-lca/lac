@@ -107,6 +107,109 @@ class BreakingNewsCreate(BaseModel):
     source: str
     category: str
 
+# Dashboard Models
+class AdminUser(BaseModel):
+    id: Optional[str] = None
+    username: str
+    email: str
+    full_name: str
+    role: str  # admin, editor
+    is_active: bool = True
+    created_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+
+class AdminUserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    full_name: str
+    role: str
+
+class Client(BaseModel):
+    id: Optional[str] = None
+    company_name: str
+    contact_person: str
+    email: str
+    phone: str
+    address: Optional[str] = None
+    created_at: Optional[datetime] = None
+    is_active: bool = True
+    total_spent: float = 0.0
+
+class ClientCreate(BaseModel):
+    company_name: str
+    contact_person: str
+    email: str
+    phone: str
+    address: Optional[str] = None
+
+class AdSpace(BaseModel):
+    id: Optional[str] = None
+    name: str
+    position: str  # header, sidebar, footer, banner, popup
+    dimensions: Dict[str, int]  # {"width": 728, "height": 90}
+    price_per_day: float
+    price_per_week: float
+    price_per_month: float
+    is_active: bool = True
+    created_at: Optional[datetime] = None
+
+class AdSpaceCreate(BaseModel):
+    name: str
+    position: str
+    dimensions: Dict[str, int]
+    price_per_day: float
+    price_per_week: float
+    price_per_month: float
+
+class AdOrder(BaseModel):
+    id: Optional[str] = None
+    client_id: str
+    ad_space_id: str
+    content_type: str  # image, video, html
+    content_url: Optional[str] = None
+    content_html: Optional[str] = None
+    start_date: datetime
+    end_date: datetime
+    duration_days: int
+    total_amount: float
+    status: str  # pending, active, completed, cancelled
+    payment_status: str  # pending, paid, overdue
+    created_at: Optional[datetime] = None
+    impressions: int = 0
+    clicks: int = 0
+
+class AdOrderCreate(BaseModel):
+    client_id: str
+    ad_space_id: str
+    content_type: str
+    content_url: Optional[str] = None
+    content_html: Optional[str] = None
+    start_date: datetime
+    end_date: datetime
+
+class Invoice(BaseModel):
+    id: Optional[str] = None
+    order_id: str
+    client_id: str
+    invoice_number: str
+    amount: float
+    tax_amount: float = 0.0
+    total_amount: float
+    issue_date: datetime
+    due_date: datetime
+    status: str  # pending, paid, overdue, cancelled
+    payment_date: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+class DashboardStats(BaseModel):
+    total_clients: int
+    active_orders: int
+    monthly_revenue: float
+    total_impressions: int
+    total_clicks: int
+    pending_payments: float
+
 class BreakingNews(BaseModel):
     id: str
     title: str
